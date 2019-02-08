@@ -1,0 +1,566 @@
+@font-face {
+  font-family: 'HussarBoldWeb';
+  font-style: normal;
+  src: url('../fonts/HussarBoldWeb.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'BarterExchange-Regular';
+  font-style: normal;
+  src: url('../fonts/BarterExchange-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../fonts/Material Icons.woff2') format('woff2');
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+  #e8e0c2 - body brown
+  #aeea00 - highlight green
+  #272500 - header/footer green
+  #4f4d1f - main green
+*/
+
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    background-color: #e8e0c2;
+    color: #4f4d1f;
+    font-family: HussarBoldWeb;
+  }
+
+main {
+  flex: 1 0 auto;
+}
+
+.input-field label {
+    color: #4f4d1f;
+}
+
+input:not([type]), 
+input[type=text]:not(.browser-default), 
+input[type=password]:not(.browser-default), 
+input[type=email]:not(.browser-default), 
+input[type=url]:not(.browser-default), 
+input[type=time]:not(.browser-default), 
+input[type=date]:not(.browser-default), 
+input[type=datetime]:not(.browser-default), 
+input[type=datetime-local]:not(.browser-default), 
+input[type=tel]:not(.browser-default), 
+input[type=number]:not(.browser-default), 
+input[type=search]:not(.browser-default), 
+textarea.materialize-textarea {
+    border-bottom: 1px solid #4f4d1f;
+    color: black;
+    font-family: BarterExchange-Regular;
+}
+
+input:not([type]):focus:not([readonly]), 
+input[type=text]:not(.browser-default):focus:not([readonly]), 
+input[type=password]:not(.browser-default):focus:not([readonly]), 
+input[type=email]:not(.browser-default):focus:not([readonly]), 
+input[type=url]:not(.browser-default):focus:not([readonly]), 
+input[type=time]:not(.browser-default):focus:not([readonly]), 
+input[type=date]:not(.browser-default):focus:not([readonly]), 
+input[type=datetime]:not(.browser-default):focus:not([readonly]), 
+input[type=datetime-local]:not(.browser-default):focus:not([readonly]), 
+input[type=tel]:not(.browser-default):focus:not([readonly]), 
+input[type=number]:not(.browser-default):focus:not([readonly]), 
+input[type=search]:not(.browser-default):focus:not([readonly]), 
+textarea.materialize-textarea:focus:not([readonly]) {
+  border-bottom: 1px solid #aeea00;
+  -webkit-box-shadow: 0 1px 0 0 #aeea00;
+  box-shadow: 0 1px 0 0 #aeea00;
+}
+
+input:not([type]):focus:not([readonly]) + label, 
+input[type=text]:not(.browser-default):focus:not([readonly]) + label, 
+input[type=password]:not(.browser-default):focus:not([readonly]) + label, 
+input[type=email]:not(.browser-default):focus:not([readonly]) + label, 
+input[type=url]:not(.browser-default):focus:not([readonly]) + label, 
+input[type=time]:not(.browser-default):focus:not([readonly]) + label, 
+input[type=date]:not(.browser-default):focus:not([readonly]) + label, 
+input[type=datetime]:not(.browser-default):focus:not([readonly]) + label, 
+input[type=datetime-local]:not(.browser-default):focus:not([readonly]) + label, 
+input[type=tel]:not(.browser-default):focus:not([readonly]) + label, 
+input[type=number]:not(.browser-default):focus:not([readonly]) + label, 
+input[type=search]:not(.browser-default):focus:not([readonly]) + label, 
+textarea.materialize-textarea:focus:not([readonly]) + label {
+  color: #aeea00;
+}
+
+input.valid:not([type]), 
+input.valid:not([type]):focus, 
+input[type=text].valid:not(.browser-default), 
+input[type=text].valid:not(.browser-default):focus, 
+input[type=password].valid:not(.browser-default), 
+input[type=password].valid:not(.browser-default):focus, 
+input[type=email].valid:not(.browser-default), 
+input[type=email].valid:not(.browser-default):focus, 
+input[type=url].valid:not(.browser-default), 
+input[type=url].valid:not(.browser-default):focus, 
+input[type=time].valid:not(.browser-default), 
+input[type=time].valid:not(.browser-default):focus, 
+input[type=date].valid:not(.browser-default), 
+input[type=date].valid:not(.browser-default):focus, 
+input[type=datetime].valid:not(.browser-default), 
+input[type=datetime].valid:not(.browser-default):focus, 
+input[type=datetime-local].valid:not(.browser-default), 
+input[type=datetime-local].valid:not(.browser-default):focus, 
+input[type=tel].valid:not(.browser-default), 
+input[type=tel].valid:not(.browser-default):focus, 
+input[type=number].valid:not(.browser-default), 
+input[type=number].valid:not(.browser-default):focus, 
+input[type=search].valid:not(.browser-default), 
+input[type=search].valid:not(.browser-default):focus, 
+textarea.materialize-textarea.valid, 
+textarea.materialize-textarea.valid:focus, 
+.select-wrapper.valid > input.select-dropdown {
+    border-bottom: 1px solid #4f4d1f;
+    -webkit-box-shadow: 0 1px 0 0 #4f4d1f;
+    box-shadow: 0 1px 0 0 #4f4d1f;
+}
+
+.btn {
+  background-color: #4f4d1f !important;
+  border-radius: 25px;
+  line-height: 40px;
+  width: 150px;
+}
+
+.btn-icon{
+  color: #4f4d1f;
+}
+
+a.btn-icon:hover {
+  color: #aeea00;
+}
+
+table th {
+  color: #4f4d1f;
+  font-family: HussarBoldWeb;
+  
+}
+
+table td {
+  color: black;
+  font-family: BarterExchange-Regular;
+}
+
+.divider {
+  background-color: #4f4d1f;
+}
+
+.container-content {
+  background-color: #fff; 
+  padding: 20px 20px 5px 20px; 
+  border-radius: 10px;
+}
+
+[type="checkbox"]:not(:checked),
+[type="checkbox"]:checked {
+  cursor: pointer;
+  height: 30px;
+  line-height: 30px;
+  pointer-events: auto !important;
+}
+
+[type="checkbox"].filled-in:not(:checked) + label:after {
+  background-color: transparent;
+  border: 2px solid #4f4d1f;
+}
+
+[type="checkbox"].filled-in:checked + label:after {
+  top: 0;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #aeea00;
+  background-color: #aeea00;
+  z-index: 0;
+}
+
+[type="radio"]:not(:checked),
+[type="radio"]:checked {
+  cursor: pointer;
+  height: 30px;
+  line-height: 30px;
+  pointer-events: auto !important;
+}
+
+[type="radio"]:not(:checked) + label:before,
+[type="radio"]:not(:checked) + label:after {
+  border: 2px solid #4f4d1f;
+}
+
+[type="radio"]:checked + label:after,
+[type="radio"].with-gap:checked + label:before,
+[type="radio"].with-gap:checked + label:after {
+  border: 2px solid #4f4d1f;
+}
+
+[type="radio"]:checked + label:after,
+[type="radio"].with-gap:checked + label:after {
+  border: 2px solid #aeea00;
+  background-color: #aeea00;
+}
+
+.label-radio{
+  color: #4f4d1f;
+  font-size: 1rem;
+}
+
+.dropdown-content {
+  font-family: BarterExchange-Regular;
+}
+
+.dropdown-content li > a, .dropdown-content li > span {
+  color: black;
+}
+
+/*---------Nav Bar----------*/
+
+nav a.button-collapse {
+    display: block;
+}
+
+.navbar {
+  background: #272500 url(../img/header.jpg) bottom left repeat-x;
+  height: 180px;
+}
+
+.navbar .margin {
+    margin-bottom: 130px;
+}
+
+.navbar .med-menu-drawer-nav a:hover, .navbar .med-menu-links a:hover {
+    background: transparent;
+    color: #aeea00;
+}
+
+.navbar .med-menu-links .active {
+    height: 50px;
+    background: transparent;
+    border-bottom: solid;
+}
+
+/*---------Side Nav--------*/
+
+.navbar-mobile {
+  height: 50px;
+}
+
+.navbar-title {
+  font-size: 22px;
+}
+
+.side-nav .header {
+  background: #fff url(../img/header.jpg) bottom left repeat-x; 
+  height: 150px;
+  margin-bottom: 5px;
+}
+
+.side-nav .header .profile-photo {
+  height: 110px;
+}
+
+.side-nav .header .profile-photo img {
+  background-color: white;
+  width: 100px;
+  height: 100px;
+  border-style: solid;
+  border-width: 3px; 
+  border-color: white; 
+  margin-left: 30px; 
+  margin-top: 10px; 
+}
+
+.side-nav .header .profile-name {
+  color: #fff; 
+}
+
+.side-nav .header .profile-name:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.side-nav .item-menu-active > a:hover {
+    background-color: #4f4d1f;
+}
+
+.side-nav .item-menu a {
+  color: #4f4d1f;
+}
+
+.side-nav .item-menu > a > i.material-icons {
+  color: #4f4d1f; 
+  margin-right: 10px
+}
+
+.side-nav .item-menu-active a {
+  background-color: #4f4d1f;
+}
+
+.side-nav .item-menu-active a {
+  color: #fff;
+}
+
+.side-nav .item-menu-active > a > i.material-icons {
+  color: #fff; 
+  margin-right: 10px
+}
+
+/*---------Footer----------*/
+
+.page-footer {
+  background-color: #272500;
+}
+
+.page-footer .link a{
+  color: #fff;
+}
+
+.page-footer .link a:hover {
+  color: #aeea00;
+}
+
+.page-footer .address{
+  font-family: BarterExchange-Regular;
+  font-size: 14px;
+}
+
+.page-footer .copyright a{
+  color: #fff;
+}
+
+.page-footer .copyright a:hover {
+  color: #aeea00;
+}
+
+/*---------Slides----------*/
+
+.slides {
+  box-shadow: 5px 5px 6px grey;
+}
+
+/*---------Card About----------*/
+
+.card-about {
+  background-color: #fff; 
+  height:350px;
+  box-shadow: 5px 5px 10px grey;
+}
+
+.card-about .title{
+  color: #4f4d1f; 
+  text-align: center;
+}
+
+.card-about .text-description{
+  font-family: BarterExchange-Regular;
+  font-size: 16px;
+  text-align: justify;
+}
+
+/*---------Card----------*/
+
+.card-common {
+  background-color: #fff; 
+  box-shadow: 5px 5px 10px grey;
+  padding: 10px 10px 10px 10px;
+}
+
+/*---------Card Table----------*/
+
+.card-table .card-action {
+  background-color: #4f4d1f;
+}
+
+.card-table .card-action a:not(.btn):not(.btn-large):not(.btn-large):not(.btn-floating) {
+  color: white;
+}
+
+.card-table .card-action a:not(.btn):not(.btn-large):not(.btn-large):not(.btn-floating):hover {
+  color: #aeea00;
+
+}
+
+.card-table span {
+  font-family: BarterExchange-Regular;
+}
+
+/*--------Pagination Table---------*/
+
+.pagination li a, .pagination li span {
+  padding-left: 10px;
+  padding-right: 10px;
+  color: #4f4d1f;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.pagination li.active {
+    border-bottom: solid;
+    background-color: transparent;
+}
+
+/*--------Menu Collapsible---------*/
+
+.collapsible {
+  box-shadow: 5px 5px 10px grey;
+}
+
+.collapsible-header {
+  background-color: #4f4d1f; 
+  color: #fff;
+}
+
+.collapsible-body {
+  background-color: #fff;
+}
+
+/*---------Menu Tabs----------*/
+
+.tabs {
+  background-color: #4f4d1f;
+}
+
+.tabs .tab a {
+  color: #fff;
+}
+
+.tabs .tab a.active {
+  background-color: white;
+  color: #4f4d1f;
+  font-weight: bold;
+}
+
+.tabs .tab a:hover {
+  color: #aeea00;
+}
+
+.tabs .tab a.active:hover {
+  background-color: white;
+  color: #4f4d1f;
+}
+
+.tabs .indicator {
+    background-color: #4f4d1f;
+}
+
+.tabs-content {
+  height: 1400px !important;
+}
+
+/*---------Menu Card----------*/
+
+.card .card-content .title{
+  color: #4f4d1f;
+}
+
+.card .card-content .description{
+  font-family: BarterExchange-Regular;
+  font-size: 16px;
+  text-align: justify;
+  margin-bottom: 5px;
+}
+
+/*---------Floating Button----------*/
+
+.btn-floating {
+  background-color: #4f4d1f; 
+  margin: 10px 10px 10px 10px;
+}
+
+.file-field .btn-floating {
+  position: absolute; 
+  top: 0px; 
+  left: 0px;
+}
+
+.btn-floating:hover {
+    background-color: #aeea00;
+}
+
+.btn-floating:focus {
+    background-color: #aeea00;
+}
+/*-------------Login----------------*/
+.login-container {
+  width: 100%;  
+  min-height: 50vh;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  background-color: #e8e0c2;
+}
+
+.login-wrap {
+  width: 500px;
+  background-color: #fff; 
+  padding-right: 20px; 
+  padding-left: 20px;
+  padding-top: 20px; 
+  margin-bottom: 20px;
+  border-radius: 10px;
+}
+
+.login-btn {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.login-link .col{
+  float: right; 
+}
+
+.login-link a{
+  color: #4f4d1f;
+  margin:0 auto;    
+  display:block;
+  font-size: small; 
+}
+
+.login-link a:hover{
+  color: #aeea00;
+}
+
+.btn-social-facebook{
+  width: 220px;
+  border-radius: 0px !important;
+  background-image: url('../img/buttons/icon-facebook.png');
+  background-size: 220px 35px;
+  margin: 5px;
+}
+
+.btn-social-google{
+  width: 220px;
+  border-radius: 0px !important;
+  background-image: url('../img/buttons/icon-google.png');
+  background-size: 220px 35px;
+  margin: 5px;
+}

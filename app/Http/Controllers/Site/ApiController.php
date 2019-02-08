@@ -1,0 +1,387 @@
+<?php
+
+namespace App\Http\Controllers\Site;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Input;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use App\Business\MenuBusiness;
+use App\Business\CheckoutBusiness;
+use App\Http\Controllers\Controller;
+use App\Http\Controllers\Admin\MenuExtraController;
+use App\Http\Controllers\Admin\MenuItemController;
+use App\Http\Controllers\Admin\MenuTypeController;
+use App\Http\Controllers\Admin\OrderHistoryController;
+use App\Http\Controllers\Site\CheckoutController;
+use App\Http\Controllers\Admin\ShopController;
+use App\Util\Util;
+use App\User;
+use App\Shop;
+use App\Checkout;
+use App\CheckoutItem;
+use App\CheckoutItemExtra;
+
+class ApiController extends Controller
+{
+    public function findOrCreateUser(Request $request)
+    {
+        $name = str_replace("%20", " ", $request['name']);
+        $email = str_replace("%20", " ", $request['email']);
+        $phone_number = str_replace("%20", " ", $request['phoneNumber']);
+        $avatar = str_replace("%20", " ", $request['avatar']);
+        $password = str_replace("%20", " ", $request['password']);
+        $provider = str_replace("%20", " ", $request['provider']);
+
+        $authUser = User::where('email', '=', $email)->first();
+        
+        if($authUser){
+            return response()->json([
+                'user' => $authUser,
+                'error' => false
+            ], 200);
+        }else{
+            $valid = true;
+            $message = '';
+            if($email == null || $email == ''){
+                $valid = false;
+                $message = "Field 'e-mail' must be filled.";
+            }else if(!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $valid = false;
+                $message = "E-mail not valid.";
+            }else if(($password != null && $password != '') && strlen($password) < 8){
+                $valid = false;
+                $message = 'Password must be at least 8 characters long.';
+            }else if($provider == null || $provider == ''){
+                $valid = false;
+                $message = "Field 'provider' must be filled.";
+            }
+
+            if($valid){
+                $user = new User();
+                $user->name = $name == null || $name == '' ? substr($user->name, 0, strpos($user->name, '@')) : $name;
+                $user->email = $email;
+                $user->phone_number = $phone_number;
+                if($avatar == null || $avatar == ''){
+                    $user->avatar = url('img/user-avatar.png');
+                }else{
+                    $user->avatar = $avatar;
+                }
+                $user->password = bcrypt($password);
+                $user->shop_id = Shop::all()->first()->id;
+                $user->provider = $provider;
+                $user->save();
+
+                $user->addRole('customer');
+
+                return response()->json([
+                    'user' => $user,
+                    'error' => false
+                ], 200);
+            }else{
+                return response()->json([
+                    'error' => true,
+                    'message' => $message
+                ], 200);
+            }
+        }
+    }
+
+    public function updateUser(Request $request, $id)
+    {
+        $name = str_replace("%20", " ", $request['name']);
+        $email = str_replace("%20", " ", $request['email']);
+        $phone_number = str_replace("%20", " ", $request['phoneNumber']);
+        $avatar = str_replace("%20", " ", $request['avatar']);
+        $password = str_replace("%20", " ", $request['password']);
+        $postcode = str_replace("%20", " ", $request['postcode']);
+        $address = str_replace("%20", " ", $request['address']);
+        $shop_id = str_replace("%20", " ", $request['preferredShopId']);
+        $receive_notifications = str_replace("%20", " ", $request['receiveNotifications']);
+        
+        $valid = true;
+        $message = '';
+        if( $name == null || $name == ''){
+            $valid = false;
+            $message = "Field 'name' must be filled.";
+        /*} if( $avatar == null || $avatar == ''){
+            $valid = false;
+            $message = "Field 'avatar' must be filled.";*/
+        } else if(($password != null && $password != '') && strlen($password) < 8){
+            $valid = false;
+            $message = 'Password must be at least 8 characters long.';
+        } else if($phone_number == null || $phone_number == ''){
+            $valid = false;
+            $message = "Field 'phone number' must be filled.";
+        } else if($postcode == null || $postcode == ''){
+            $valid = false;
+            $message = "Field 'postcode' must be filled.";
+        } else if($address == null || $address == ''){
+            $valid = false;
+            $message = "Field 'address' must be filled.";
+        } else if($shop_id == null || $shop_id == ''){
+            $valid = false;
+            $message = "Field 'preferred shop' must be filled.";
+        } else if($receive_notifications == null || $receive_notifications == ''){
+            $valid = false;
+            $message = "Field 'receive notifications' must be filled.";
+        } 
+
+        if($valid){
+            $user = User::find($id);
+            $user->name = $name;
+            $user->email = $email;
+            $user->phone_number = $phone_number;
+            $user->avatar = $avatar;
+            $user->password = bcrypt($password);
+            $user->postcode = $postcode;
+            $user->address = $address;
+            $user->shop_id = $shop_id;
+            $user->receive_notifications = $receive_notifications;
+            $user->update();
+
+            return response()->json([
+                'user' => $user, 
+                'error' => false,
+                'message' => 'User updated successfully.'
+            ], 200);
+        }else{
+            return response()->json([
+                'error' => true,
+                'message' => $message
+            ], 200);
+        }
+    }
+
+    public function getUser($email)
+    {   
+        $user = User::where('email', '=', $email)->first();
+
+        if(isset($user)){
+            return response()->json([
+                'error' => false,
+                'user' => $user
+            ], 200);
+        }else{
+            return response()->json([
+                'error' => true,
+                'message' => 'There is no user related to this e-mail.'
+            ], 200);
+        }
+    }
+
+    public function deleteUser($id)
+    {   
+        $user = User::find($id);
+        if(isset($user)){
+            $user->delete();
+        }
+        return response()->json([
+            'error' => false,
+            'message' => 'User deleted.'
+        ], 200);
+    }
+
+    public function uploadImageUser(Request $request, $id)
+    {
+        $photoName = 'avatar.jpeg';
+        $user = User::find($id);
+        
+        $path = $request->photo->storeAs('/public/avatars/'.$id, $photoName);
+
+        $user->avatar = $photoName;
+        $user->update();
+        
+        return response()->json($photoName, 200);
+    }
+
+    public function getImageUser($id)
+    {
+        $user = User::find($id);
+        $path = storage_path('app/public/avatars/'.$id.'/'.$user->avatar);
+        
+        if (!File::exists($path)) {
+            abort(404);
+        }
+
+        $file = File::get($path);
+        $type = File::mimeType($path);
+
+        $response = Response::make($file, 200);
+        $response->header("Content-Type", $type);
+
+        return $response;
+    }
+
+    public function listMenuExtra($menuitem_id)
+    {
+        return MenuBusiness::findMenuExtra($menuitem_id);
+    }
+
+    public function findMenuExtra($id)
+    {   
+        return (new MenuExtraController())->find($id, 'api');
+    }
+
+    public function listMenuItem($menutype_id, $preferredShop_id)
+    {
+        return MenuBusiness::findMenuItem($menutype_id, $preferredShop_id);
+    }
+
+    public function getMenuItemImage($id)
+    {
+        return MenuBusiness::getMenuItemImage($id);
+    }
+
+    public function listMenuType($preferredShop_id)
+    {
+        return MenuBusiness::findMenuTypes($preferredShop_id);
+    }
+
+    public function findMenuType($id)
+    {
+        return (new MenuTypeController())->find($id, 'api');
+    }
+
+    public function listOrderHistory($user_id)
+    {
+        return (new OrderHistoryController())->index($user_id, 'api');
+    }
+
+    public function findOrderHistory($id)
+    {   
+        return (new OrderHistoryController())->details($id, 'api');
+    }
+
+    public function orderAgain($id, $user_id)
+	{
+		$lastCheckout = Checkout::where('user_id', '=', $user_id)
+			->where('confirmed', '=', false)
+			->first();
+
+		if(isset($lastCheckout)){
+			$lastCheckout->delete();
+		}
+
+		$checkout = Checkout::find($id);
+		
+		$newCheckout = new Checkout();
+		$newCheckout->user_id = $checkout->user_id;
+		$newCheckout->shop_id = $checkout->shop_id;
+		$newCheckout->partial_value = $checkout->partial_value;
+		$newCheckout->delivery_fee = $checkout->delivery_fee;
+		$newCheckout->rider_tip = $checkout->rider_tip;
+		$newCheckout->total_value = $checkout->total_value;
+		$newCheckout->delivery_postcode = $checkout->delivery_postcode;
+		$newCheckout->delivery_postcode = $checkout->delivery_postcode;
+		$newCheckout->delivery_address = $checkout->delivery_address;
+		$newCheckout->delivery_address = $checkout->delivery_address;
+		$newCheckout->delivery_phone = $checkout->delivery_phone;
+		$newCheckout->save();
+
+		foreach ($checkout->checkoutItems as $checkoutItem) {
+			$newCheckoutItem = new CheckoutItem();
+			$newCheckoutItem->checkout_id = $newCheckout->id;
+			$newCheckoutItem->unitary_price = $checkoutItem->unitary_price;
+			$newCheckoutItem->quantity = $checkoutItem->quantity;
+			$newCheckoutItem->total_price = $checkoutItem->total_price;
+			$newCheckoutItem->total_price = $checkoutItem->total_price;
+			$newCheckoutItem->menuitem_id = $checkoutItem->menuitem_id;
+			$newCheckoutItem->save();
+
+			foreach ($checkoutItem->checkoutItemExtras as $checkoutItemExtra) {
+				$newCheckoutItemExtra = new CheckoutItemExtra();
+				$newCheckoutItemExtra->checkoutitem_id = $newCheckoutItem->id;
+				$newCheckoutItemExtra->price = $checkoutItemExtra->price;
+				$newCheckoutItemExtra->menuextra_id = $checkoutItemExtra->menuextra_id;
+				$newCheckoutItemExtra->save();
+			}
+		}
+
+		return (new CheckoutController())->shoppingCart($user_id, 'api');
+	}
+
+    public function getOrderItems($id)
+    {   
+        return (new OrderHistoryController())->getOrderItems($id, 'api');
+    }
+
+    public function getShoppingCart($user_id)
+    {
+        return CheckoutBusiness::shoppingCart($user_id);
+    }
+
+    public function addItemToShoppingCart(Request $request, $user_id)
+    {
+        $data = $request->all();
+        $menuExtras = explode(',', $data['menuExtras']);
+        foreach($menuExtras as $menuextra_id){
+            $data['menuextra_'.$menuextra_id] = $menuextra_id;
+        }
+        return CheckoutBusiness::addItem($data, $user_id);
+    }
+
+    public function removeItemFromShoppingCart($user_id, $checkoutitem_id)
+    {
+        return CheckoutBusiness::removeItem($checkoutitem_id, $user_id);
+    }
+
+    public function plusItemToShoppingCart($user_id, $checkoutitem_id)
+    {
+        return CheckoutBusiness::plusItem($checkoutitem_id, $user_id);
+    }
+
+    public function minusItemFromShoppingCart($user_id, $checkoutitem_id)
+    {
+        return CheckoutBusiness::minusItem($checkoutitem_id, $user_id);
+    }
+
+    public function plusRiderTip($user_id)
+    {
+        return CheckoutBusiness::plusTip($user_id);
+    }
+
+    public function minusRiderTip($user_id)
+    {
+        return CheckoutBusiness::minusTip($user_id);
+    }
+
+    public function confirmCheckout(Request $request, $user_id, $shop_id)
+    {
+        if($request['phone'] == 'null' || $request['phone'] == ''){
+            $phone = null;
+        }else{
+            $phone = str_replace("%20", " ", $request['phone']);
+        }
+        if($request['postcode'] == 'null'  || $request['postcode'] == ''){
+            $postcode = null;
+        }else{
+            $postcode = str_replace("%20", " ", $request['postcode']);
+        }
+        if($request['address'] == 'null'  || $request['address'] == ''){
+            $address = null;
+        }else{
+            $address = str_replace("%20", " ", $request['address']);
+        }
+        if($request['deliverOrCollect'] == 'null'  || $request['deliverOrCollect'] == ''){
+            $deliverOrCollect = null;
+        }else{
+            $deliverOrCollect = $request['deliverOrCollect'];
+        }
+        
+        return CheckoutBusiness::confirmCheckout($user_id, $shop_id, $deliverOrCollect, $phone, $postcode, $address);
+    }
+
+    public function listShops($openedShops)
+    {
+        return Util::listShops($openedShops);
+    }
+
+    public function sendMail(Request $request)
+    {
+        $data = $request->all();
+        return Util::sendMail($data);
+    }
+}
