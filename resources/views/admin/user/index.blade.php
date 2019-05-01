@@ -61,6 +61,14 @@
     <div class="row" align="center">
         {{ $registers->links() }}
     </div>
+    @can('user_add')
+    <div class="row hide-on-small-only">
+        <a class="btn waves-effect waves-light" href="{{ route('admin.user.add') }}">Add</a>
+    </div>
+    <div class="row center-align hide-on-med-and-up">
+        <a class="btn waves-effect waves-light" href="{{ route('admin.user.add') }}">Add</a>
+    </div>
+    @endcan
 </div>
 <div class="row"></div>
 @endsection

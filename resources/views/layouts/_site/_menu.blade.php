@@ -1,14 +1,22 @@
 <input type="hidden" name="menuitem_id" id="menuitem_id" />
 <input type="hidden" name="menuextra_action" id="menuextra_action">
-<div class="row" style="margin-bottom: 0px">
-	<div class="col m12 s12" style="padding: 0px 0px 0px 0px;">
-		<div class="input-field card-common">
-			<select name="shop_id" onchange="this.form.submit()">
+<div class="row card-common" style="margin-bottom: 0px">
+	<div class="col s12 m10">
+		<div class="input-field">
+			<select name="shop_id">
 				@foreach($shops as $shop)
-					<option value="{{ $shop->id }}">{{ $shop->name }} - {{ $shop->address }}</option>
+				@if($shop_id == $shop->id)
+				<option value="{{ $shop->id }}" selected>{{ $shop->name }} - {{ $shop->address }}</option>
+				@else
+				<option value="{{ $shop->id }}">{{ $shop->name }} - {{ $shop->address }}</option>
+				@endif
 				@endforeach
 			</select>
+			<label>Choose a shop:</label>
 		</div>
+	</div>
+	<div class="col s12 m2" style="padding: 20px 0px 0px 10px;">
+		<button class="btn waves-effect waves-light">Confirm</button>
 	</div>
 </div>
 <div class="row hide-on-small-only">
@@ -24,12 +32,7 @@
 				<div class="col m3">
 					<div class="card">
 						<div class="card-image">
-							<a href="#"><img src="{{ isset($menutype->menuItems->get($i)->image) ? $menutype->menuItems->get($i)->image : asset('img/menu/'.strtolower($menutype->name).'.jpg') }}"></a>
-							@if($menutype->menuItems->get($i)->menuExtras->count())
-		                    <a class="btn-floating btn-large halfway-fab modal-trigger waves-effect waves-light" href="#modalExtras-med-{{ str_slug($menutype->menuItems->get($i)->name, '-').$menutype->menuItems->get($i)->id }}" onclick="$('#menuitem_id').val({{ $menutype->menuItems->get($i)->id }});"><i class="large material-icons">add</i></a>
-		                    @else
-		                    <a class="btn-floating btn-large halfway-fab modal-trigger waves-effect waves-light" href="#{{ str_slug($menutype->name, '-') }}-tab-med" onclick="$('#menuitem_id').val({{ $menutype->menuItems->get($i)->id }}); $('#form_menu').submit();"><i class="large material-icons">add</i></a>
-		                    @endif
+							<img src="{{ isset($menutype->menuItems->get($i)->image) ? $menutype->menuItems->get($i)->image : asset('img/menu/'.strtolower($menutype->name).'.jpg') }}">
 						</div>
 						<div class="card-content">
 							<p><b class="title">{{ $menutype->menuItems->get($i)->name }}</b></p>
@@ -60,12 +63,7 @@
 			<div class="col s12">
 				<div class="card" id="{{ str_slug($menuitem->name, '-') }}-mobile">
 					<div class="card-image">
-						<a href="#"><img src="{{ isset($menuitem->image) ? $menuitem->image : asset('img/menu/'.strtolower($menutype->name).'.jpg') }}"></a>
-	                    @if($menuitem->menuExtras->count())
-	                    <a class="btn-floating btn-large halfway-fab modal-trigger waves-effect waves-light" href="#modalExtras-mobile-{{ str_slug($menuitem->name, '-').$menuitem->id }}" onclick="$('#menuitem_id').val({{ $menuitem->id }});"><i class="large material-icons">add</i></a>
-	                    @else
-	                    <a class="btn-floating btn-large halfway-fab modal-trigger waves-effect waves-light" href="#{{ str_slug($menuitem->name, '-') }}-mobile" onclick="$('#menuitem_id').val({{ $menuitem->id }}); $('#form_menu').submit();"><i class="large material-icons">add</i></a>
-	                    @endif
+						<img src="{{ isset($menuitem->image) ? $menuitem->image : asset('img/menu/'.strtolower($menutype->name).'.jpg') }}">
 					</div>
 					<div class="card-content">
 						<p><b class="title">{{ $menuitem->name }}</b></p>
@@ -80,10 +78,12 @@
 	@endforeach
 </div>
 
+<!--
+	Removed at 11/02/19
 @foreach($menutypes as $menutype)
 @foreach($menutype->menuItems as $menuitem)
 @if($menuitem->menuExtras->count())
-<!-- Modal Structure -->
+Modal Structure
 <div id="modalExtras-med-{{ str_slug($menuitem->name, '-').$menuitem->id }}" class="modal">
     <div class="modal-content">
       <h3>Want to add any extras?</h4>
@@ -117,7 +117,7 @@
 @foreach($menutypes as $menutype)
 @foreach($menutype->menuItems as $menuitem)
 @if($menuitem->menuExtras->count() > 0)
-<!-- Modal Structure -->
+Modal Structure
 <div id="modalExtras-mobile-{{ str_slug($menuitem->name, '-').$menuitem->id }}" class="modal bottom-sheet">
     <div class="modal-content">
       <h5>Want to add any extras?</h4>
@@ -142,3 +142,4 @@
 @endif
 @endforeach
 @endforeach
+-->

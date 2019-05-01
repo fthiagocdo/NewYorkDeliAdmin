@@ -9,17 +9,18 @@
 					<input type="hidden" id="idToken" name="idToken">
 					<input type="hidden" id="provider" name="provider">
 					{{csrf_field()}}
+					@if(false)
+					<!--Removed at 20/02/19
 					<div class="row center-align">
 						<div class="col s12 m6">
-							<a href="{{ route('site.login.social', 'facebook') }}" class="btn btn-social-facebook waves-effect waves-light"></a>
+							<a href="route('site.login.social', 'facebook') }}" class="btn btn-social-facebook waves-effect waves-light"></a>
 						</div>
 						<div class="col s12 m6">
-						<a href="{{ route('site.login.social', 'google') }}" class="btn btn-social-google waves-effect waves-light"></a>
+						<a href="route('site.login.social', 'google') }}" class="btn btn-social-google waves-effect waves-light"></a>
 						</div>
 					</div>
-					<div class="row">
-						<div class="divider"></div>
-					</div>
+					-->
+					@endif
 					<div class="input-field">
 						<input class="validate" type="text" id="email" name="email" value="{{ Session::get('email') }}">
 						<label>E-mail</label>
@@ -34,12 +35,14 @@
 						</div>
 					</div>
 					<div class="row center-align">
+						@if(false)
+						<!-- Removed at 20/02/19
 						<div class="col s12 m6">
-							<a class="btn login-btn waves-effect waves-light" href="{{ route('site.login.signup') }}">Sign up</a>
+							<a class="btn login-btn waves-effect waves-light" href="route('site.login.signup') }}">Sign up</a>
 						</div>
-						<div class="col s12 m6">
-							<a class="btn login-btn waves-effect waves-light" href="#" onclick="signin()">Log in</a>
-						</div>
+						<-->
+						@endif
+						<a class="btn login-btn waves-effect waves-light" href="#" onclick="signin()">Log in</a>
 					</div>
 				</form>
 			</div>

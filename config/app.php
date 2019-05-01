@@ -148,6 +148,7 @@ return [
         Illuminate\View\ViewServiceProvider::class,
         GoogleMaps\ServiceProvider\GoogleMapsServiceProvider::class,
         Barryvdh\DomPDF\ServiceProvider::class,
+        Laravel\Passport\PassportServiceProvider::class,
 
         /*
          * Package Service Providers...

@@ -31,6 +31,8 @@ class UserBusiness
                 if($return['error']){
                     $user->delete();
                     return $return;
+                }else{
+                    $user->password = $firebaseUser->uid;
                 }
             }
 
@@ -74,7 +76,7 @@ class UserBusiness
             $user = User::where('email', '=', $email)->first();
             
             //Email Login Failed - User not registered
-	        if(!isset($user)){
+            if(!isset($user)){
                 $return['error'] = true;
                 $return['message'] = 'E-mail is not registered.';
                 return $return;
@@ -85,12 +87,21 @@ class UserBusiness
                 return $return;
             //Email Login Success
             }else if(Auth::loginUsingId($user->id)){
-                $user->nu_error_login = 0;
-                $user->update();
-                
-                $return['error'] = false;
-                $return['message'] = 'Success Login';
-                return $return;
+                //User hasn't permission to access
+                if($user->hasRole('CUSTOMER')){
+                    Auth::logout();
+                    $return['error'] = true;
+                    $return['message'] = 'Sorry, but you have no permission to access this website.<br>If you want to make a order, please download our app.';
+                    return $return;
+                //User has permission to access
+                }else{
+                    $user->nu_error_login = 0;
+                    $user->update();
+                    
+                    $return['error'] = false;
+                    $return['message'] = 'Success Login';
+                    return $return;
+                }
             //Email Login Failed - Email/Password does not match
             }else{
                 $nu_error_login = $user->nu_error_login;
@@ -240,6 +251,7 @@ class UserBusiness
             $return['error'] = false;
             $return['message'] = 'User created successfully.';
             $return['user'] = $user;
+            
             return $return;
         }catch (\Exception $e) {
             $return['error'] = true;
@@ -263,6 +275,8 @@ class UserBusiness
             
             $user = $auth->createUser($userProperties);
 
+            dd($user);
+            //$return['user_uid'] = $user->;
             $return['error'] = false;
             $return['message'] = 'User created successfully.';
             return $return;

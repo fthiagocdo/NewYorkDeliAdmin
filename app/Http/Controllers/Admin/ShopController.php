@@ -48,6 +48,7 @@ class ShopController extends Controller
             $register->name = $data['name'];
             $register->address = $data['address'];
             $register->available = isset($data['available']) ? true : false;
+            $register->delivery = isset($data['delivery']) ? true : false;
 
 			$msgError = $this->validateShop($register, $data);
             if(!isset($msgError)){
@@ -95,7 +96,8 @@ class ShopController extends Controller
             $register->name = $data['name'];
             $register->address = $data['address'];
             $register->available = isset($data['available']) ? true : false;
-
+            $register->delivery = isset($data['delivery']) ? true : false;
+            
 			$msgError = $this->validateShop($register, $data);
             if(!isset($msgError)){
                 $register->update();
@@ -130,6 +132,42 @@ class ShopController extends Controller
             return redirect()->route('admin.shop')
                 ->with( ['message' => $message] )
                 ->with( ['typeMessage' => $typeMessage] );
+        }else{
+           return Util::redirectHome();
+        }
+    }
+
+    public function paymentSetup($id)
+    {
+        if(auth()->user()->can('shop_edit')){
+	        $register = Shop::find($id);
+	        
+	        \Session::flash('register', $register);
+
+            return view('admin.shoppayment.index')
+            	->with(['previousPage' => 'admin.shop']);
+        }else{
+           return Util::redirectHome();
+        }
+    }
+
+    public function savePaymentSetup(Request $request, $id)
+    {
+        if(auth()->user()->can('shop_edit')){
+        	$data = $request->all();
+
+            $register = Shop::find($id);
+            $register->vendor_name = $data['vendor_name'];
+            $register->integration_key = $data['integration_key'];
+            $register->integration_password = $data['integration_password'];
+            $register->update();
+
+            $message = 'Payment setup updated successfully.';
+            $typeMessage = 'green white-text';
+
+            return redirect()->route('admin.shop')
+                ->with(['message' => $message])
+                ->with(['typeMessage' => $typeMessage]);
         }else{
            return Util::redirectHome();
         }

@@ -7,10 +7,11 @@ use Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Shop;
+use App\Country;
 
 class Util
 {
-	public static function Mask($mask,$str){
+	public static function Mask($mask, $str){
 
 	    $str = str_replace(" ","",$str);
 
@@ -48,26 +49,29 @@ class Util
         return $date->format('d/m/Y h:i A');
     }
 
-    public static function sendMail($data)
+    public static function sendMail($name, $sender, $receiver, $message, $attachedFile, $attachedFilename)
     {
         try{
-            $name = $data['name'];
-            $email = $data['email'];
-            $message = $data['message'];
-            
-            $msgError = Util::validateContact($name, $email, $message);        
+            $data['name'] = $name; 
+            $data['message'] = $message;
+
+            $msgError = Util::validateContact($name, $sender, $receiver, $message, $attachedFile, $attachedFilename);        
             if(strlen($msgError) == 0) {
                 $receiver = 'fthiagocdo@gmail.com';
                 Mail::send('emails.contact', 
                     [
                         'data'=>$data
                     ], 
-                    function($mail) use ($name, $email, $receiver){
-                        $mail->from($email, $name);
-                        $mail->replyTo($email, $name);
+                    function($mail) use ($name, $sender, $receiver, $attachedFile, $attachedFilename){
+                        $mail->from($sender, $name);
+                        $mail->replyTo($sender, $name);
                         $mail->to($receiver);
                         $mail->subject('Mail sent through app');
-                });
+                        if($attachedFile != null){
+                            $mail->attachData($attachedFile, $attachedFilename);
+                        }
+                    }
+                );
 
                 $return['error'] = false;
                 $return['message'] = 'Your message was sent.';
@@ -85,35 +89,43 @@ class Util
         }
     }
 
-    private static function validateContact($name, $email, $message)
+    private static function validateContact($name, $sender, $receiver, $message, $attachedFile, $attachedFilename)
     {
         if(!isset($name)){
             return "Field 'name' must be informed.";
-        } else if(!isset($email)){
-            return "Field 'email' must be informed.";
+        } else if(!isset($sender)){
+            return "Field 'sender email' must be informed.";
+        } else if(!isset($receiver)){
+            return "Field 'receiver email' must be informed.";
         } else if(!isset($message)){
             return "Field 'message' must be informed.";
-        } else if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return 'E-mail is not valid.';
+        } else if(!filter_var($sender, FILTER_VALIDATE_EMAIL)) {
+            return 'Sender E-mail is not valid.';
+        } else if(!filter_var($receiver, FILTER_VALIDATE_EMAIL)) {
+            return 'Receiver E-mail is not valid.';
+        } else if(isset($attachedFile)){
+            if(!isset($attachedFilename)){
+                return "Field 'file name' must be informed.";
+            }
         }
 
         return '';
     }
 
-    public static function listShops($openedShops)
+    public static function listShops($justOpenedShops)
     {
         try{
             $listShops = collect();
             $shops = Shop::orderBy('name', 'asc')->get();
             
-            if($openedShops){
-                foreach($shops as $shop){
-                    if($shop->isOpen()){
-                        $listShops->push($shop);
-                    }
+            foreach($shops as $shop){
+                if($shop->isOpen()){
+                    $shop->available = true;
+                    $listShops->push($shop);
+                }else if($justOpenedShops == false || $justOpenedShops == 'false'){
+                    $shop->available = false;
+                    $listShops->push($shop);
                 }
-            }else{
-                $listShops = $shops;
             }
 
             $return['error'] = false;
@@ -121,6 +133,45 @@ class Util
             return $return;
         }catch(Exception $e){
             Log::error('Util.listShops: '.$e->getMessage());
+            $return['error'] = true;
+            $return['message'] = 'It was no possible complete your request. Please try again later...';
+            return $return;
+        }
+    }
+
+    public static function splitText($text, $max_length, $split){
+        if(isset($split)){
+            $arrayText = explode($split, $text);
+        }else{
+            $arrayText[0] = $text;
+        }
+
+        $return = "";
+        foreach($arrayText as $string){
+            $newString = $string."\n";
+            
+            while(strlen($newString) > $max_length+1){
+                $return = $return.substr($newString, 0, $max_length)."\n";
+                $newString = substr($newString, $max_length, strlen($newString));
+            }
+            if(strlen($newString) > 0){
+                $return = $return.$newString;
+            }
+        }
+
+        return $return;
+    }
+
+    public static function listCountries()
+    {
+        try{
+            $countries = Country::orderBy('name', 'asc')->get();
+            
+            $return['error'] = false;
+            $return['list'] = $countries;
+            return $return;
+        }catch(Exception $e){
+            Log::error('Util.listCountries: '.$e->getMessage());
             $return['error'] = true;
             $return['message'] = 'It was no possible complete your request. Please try again later...';
             return $return;

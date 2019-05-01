@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Util\Util;
+use App\Business\UserBusiness;
 use App\User;
 use App\Role;
 use App\Shop;
@@ -78,6 +79,41 @@ class UserController extends Controller
            return Util::redirectHome();
         }
     }
+
+    public function add() 
+	{
+		return view('admin.user.add')
+            ->with('previousPage', 'admin.user');
+	}
+
+	public function save(Request $request) 
+	{
+        $data = $request->all();
+        $data['provider'] = 'email';
+
+        if($request->file('image-med')){
+            $path = $request->file('image-med')->store('public/avatars');
+            $data['avatar'] = $path;
+        }else if($request->file('image-mobile')){
+            $path = $request->file('image-mobile')->store('public/avatars');
+            $data['avatar'] = $path;
+        }
+
+		$return = UserBusiness::createUser($data);
+        
+		if($return['error']){
+			return redirect()->back()
+                ->with('message', $return['message'])
+                ->with('typeMessage', 'red white-text')
+                ->with('avatar', isset($data['avatar']) ? $data['avatar'] : '')
+                ->with('name', isset($data['name']) ? $data['name'] : '')
+                ->with('email', isset($data['email']) ? $data['email'] : '');
+		}else{
+            return redirect()->route('admin.user')
+                ->with('message', $return['message'])
+                ->with('typeMessage', 'green white-text');
+		}
+	}
 
     public function details($id)
     {

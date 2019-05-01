@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Checkout;
 use App\ShopSchedule;
 use App\User;
+use App\MenuType;
 
 class Shop extends Model
 {
@@ -22,6 +23,11 @@ class Shop extends Model
     public function users()
     {
         return $this->hasMany(User::class, 'shop_id', 'id');
+    }
+
+    public function menuTypes()
+    {
+        return $this->hasMany(MenuType::class, 'shop_id', 'id');
     }
 
     public function isOpen()

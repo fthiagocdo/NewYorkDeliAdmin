@@ -20,10 +20,11 @@
             <tbody>
             @foreach($registers as $register)
                 <tr>
-                    <td>{{ ucfirst($register->name) }}</register>
-                    <td>{{ $register->address }}</register>
+                    <td>{{ ucfirst($register->name) }}</td>
+                    <td>{{ $register->address }}</td>
                     <td>
                         <a class="btn-icon" href="{{ route('admin.shop.shopschedule', $register->id) }}"><i class="small material-icons" title="Shop Schedule">access_time</i></a>
+                        <a class="btn-icon" href="{{ route('admin.shop.paymentsetup', $register->id) }}"><i class="small material-icons" title="Payment Setup">payment</i></a>
                         <a class="btn-icon" href="{{ route('admin.shop.edit', $register->id) }}" title="Edit Shop"><i class="small material-icons">edit</i></a>
                         <a class="btn-icon" href="javascript: if(confirm('Delete shop?')){ window.location.href = '{{ route('admin.shop.delete', $register->id) }}' }" title="Delete Shop"><i class="small material-icons">delete</i></a>
                     </td>
@@ -42,6 +43,7 @@
                     </div>
                     <div class="card-action right-align" style="min-height: 70px;">
                         <a class="btn-icon" href="{{ route('admin.shop.shopschedule', $register->id) }}"><i class="small material-icons" title="Shop Schedule">access_time</i></a>
+                        <a class="btn-icon" href="{{ route('admin.shop.paymentsetup', $register->id) }}"><i class="small material-icons" title="Payment Setup">payment</i></a>
                         <a class="btn-icon" href="{{ route('admin.shop.edit', $register->id) }}" title="Edit Shop"><i class="small material-icons">edit</i></a>
                         <a class="btn-icon" href="javascript: if(confirm('Delete shop?')){ window.location.href = '{{ route('admin.shop.delete', $register->id) }}' }" title="Delete Shop"><i class="small material-icons">delete</i></a>
                     </div>

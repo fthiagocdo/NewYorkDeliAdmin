@@ -10,31 +10,24 @@ use App\CheckoutItemExtra;
 
 class OrderHistoryController extends Controller
 {
-    public function index($user_id = null, $mode = null)
+    public function index($user_id, $shop_id)
     {
-        if($mode == 'api'){
+		try{
 			$registers = Checkout::where('user_id', '=', $user_id)
+				->where('shop_id', '=', $shop_id)
 				->where('confirmed', '=', true)
 				->orderBy('updated_at', 'desc')
 				->get();
 
-            if($registers->count()){
-                return response()->json($registers);
-            }else{
-                return response()->json([
-                    'messsage' => 'No records found.',
-                    'status' => 'OK'
-                ]);
-            }
-        }else{
-			$registers = Checkout::where('user_id', '=', auth()->user()->id)
-							->where('confirmed', '=', true)
-							->orderBy('updated_at', 'desc');
-							
-			return view('admin.orderhistory.index')
-					->with(['registers' => $registers->paginate(5)])
-					->with(['currentMenu' => 'orderhistory']);
-		}
+			$return['error'] = false;
+            $return['list'] = $registers;
+            return $return;
+        }catch(Exception $e){
+            Log::error('OrderHistoryController.index: '.$e->getMessage());
+            $return['error'] = true;
+            $return['message'] = 'It was no possible complete your request. Please try again later...';
+            return $return;
+        }
     }
 
     public function details($id, $mode = null)

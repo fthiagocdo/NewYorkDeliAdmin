@@ -4,22 +4,29 @@ namespace App\Business;
 
 use Exception;
 use GoogleMaps;
+use PDF;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use App\Util\Util;
 use App\Checkout;
 use App\Shop;
+use App\ShopSchedule;
 use App\User;
 use App\MenuItem;
 use App\CheckoutItem;
 use App\CheckoutItemExtra;
+use App\PaymentConfirmation;
 
 class CheckoutBusiness
 {
-    public static function shoppingCart($user_id)
+    public static function shoppingCart($user_id, $shop_id)
 	{
         try{
             $shops = Shop::all();
-            $checkout = CheckoutBusiness::findOrCreateCheckout($user_id);
-
+            
+            $checkout = CheckoutBusiness::findOrCreateCheckout($user_id, $shop_id);
+            
             //order -> checkoutItem
             $listcheckoutItem = collect();
             foreach ($checkout->checkoutItems as $checkoutItem) {
@@ -29,7 +36,7 @@ class CheckoutBusiness
                 $itemMenu['type'] = $checkoutItem->menuItem->type->name;
                 $itemMenu['quantity'] = $checkoutItem->quantity;
                 $itemMenu['totalValue'] = $checkoutItem->total_price;
-
+                
                 //order -> checkoutItem -> checkoutItemExtra
                 $listcheckoutItemExtra = collect();
                 foreach ($checkoutItem->checkoutItemExtras as $checkoutItemExtra) {
@@ -54,10 +61,11 @@ class CheckoutBusiness
         }
     }
     
-    private static function findOrCreateCheckout($user_id)
+    private static function findOrCreateCheckout($user_id, $shop_id)
 	{
         try{
             $user = User::find($user_id);
+            
             $checkout = Checkout::where('user_id', '=', $user->id)
                 ->where('confirmed', '=', false)
                 ->first();
@@ -67,9 +75,10 @@ class CheckoutBusiness
                 $checkout->user_id = $user->id;
                 $checkout->partial_value = 0.0;
                 $checkout->total_value = 2;
+                $checkout->deliver_or_collect = 'deliver_address';
                 $checkout->delivery_fee = 2;
                 $checkout->rider_tip = 0.0;
-                $checkout->shop_id = $user->shop_id;
+                $checkout->shop_id = $shop_id;
                 
                 $checkout->save();
             }
@@ -77,7 +86,7 @@ class CheckoutBusiness
             if($checkout->shop != null && !$checkout->shop->isOpen()){
                 $checkout->shop_id = null;
             }
-
+            
             return $checkout;
         }catch(Exception $e){
             Log::error('CheckoutBusiness.findOrCreateCheckout: '.$e->getMessage());
@@ -87,9 +96,9 @@ class CheckoutBusiness
         }
     }
     
-    public static function addItem($data, $user_id)
+    public static function addItem($data, $user_id, $shop_id)
     {   	
-        $return = CheckoutBusiness::shoppingCart($user_id);
+        $return = CheckoutBusiness::shoppingCart($user_id, $shop_id);
         if($return['error']){
             return $return;
         }else{
@@ -144,7 +153,7 @@ class CheckoutBusiness
 
     public static function removeItem($id, $user_id)
 	{
-        $return = CheckoutBusiness::shoppingCart($user_id);
+        $return = CheckoutBusiness::shoppingCart($user_id, null);
         if($return['error']){
             return $return;
         }else{
@@ -172,7 +181,7 @@ class CheckoutBusiness
     
     public static function plusItem($id, $user_id)
 	{
-        $return = CheckoutBusiness::shoppingCart($user_id);
+        $return = CheckoutBusiness::shoppingCart($user_id, null);
         if($return['error']){
             return $return;
         }else{
@@ -202,7 +211,7 @@ class CheckoutBusiness
 
     public static function minusItem($id, $user_id)
 	{
-        $return = CheckoutBusiness::shoppingCart($user_id);
+        $return = CheckoutBusiness::shoppingCart($user_id, null);
         if($return['error']){
             return $return;
         }else{
@@ -236,7 +245,7 @@ class CheckoutBusiness
     
     public static function plusTip($user_id)
 	{
-        $return = CheckoutBusiness::shoppingCart($user_id);
+        $return = CheckoutBusiness::shoppingCart($user_id, null);
         if($return['error']){
             return $return;
         }else{
@@ -261,7 +270,7 @@ class CheckoutBusiness
     
     public static function minusTip($user_id)
 	{
-		$return = CheckoutBusiness::shoppingCart($user_id);
+		$return = CheckoutBusiness::shoppingCart($user_id, null);
         if($return['error']){
             return $return;
         }else{
@@ -285,11 +294,69 @@ class CheckoutBusiness
             }
         }
     }	
+
+    public static function deliverOrCollect($user_id, $deliverOrCollect)
+	{
+        $return = CheckoutBusiness::shoppingCart($user_id, null);
+        if($return['error']){
+            return $return;
+        }else{
+            try{
+				$checkout = $return['checkout'];
+                $checkout->deliver_or_collect = $deliverOrCollect;
+                if($deliverOrCollect == 'deliver_address'){
+                    $checkout->delivery_fee = 2;
+                    $checkout->total_value = (string) ($checkout->total_value + 2);
+                }else{
+                    $checkout->delivery_fee = 0;
+                    $checkout->total_value = (string) ($checkout->total_value - 2);
+                    if($checkout->total_value < 0){
+                        $checkout->total_value = "0";
+                    }
+                }
+                $checkout->update();
+                
+                $return['error'] = false;
+                $return['message'] = 'Your cart was updated.';
+                $return['checkout'] = $checkout;
+                return $return;
+            }catch(Exception $e){
+                Log::error('CheckoutBusiness.deliverOrCollect: '.$e->getMessage());
+                $return['error'] = true;
+                $return['message'] = 'It was no possible complete your request. Please try again later...';
+                return $return;
+            }
+        }
+    }
+
+    public static function checkoutMessage($user_id, $checkout_message)
+	{
+        $return = CheckoutBusiness::shoppingCart($user_id, null);
+        if($return['error']){
+            return $return;
+        }else{
+            try{
+				$checkout = $return['checkout'];
+                $checkout->checkout_message = $checkout_message;
+                $checkout->update();
+                
+                $return['error'] = false;
+                $return['message'] = 'OK';
+                $return['checkout'] = $checkout;
+                return $return;
+            }catch(Exception $e){
+                Log::error('CheckoutBusiness.checkoutMessage: '.$e->getMessage());
+                $return['error'] = true;
+                $return['message'] = 'It was no possible complete your request. Please try again later...';
+                return $return;
+            }
+        }
+    }
     
-    public static function confirmCheckout($user_id, $shop_id, $deliverOrCollect, $phone, $postcode, $address)
+    public static function confirmCheckout($user_id, $shop_id, $time, $phone, $postcode, $address, $table_number)
     {
         try{
-            $return = CheckoutBusiness::shoppingCart($user_id);
+            $return = CheckoutBusiness::shoppingCart($user_id, null);
             if($return['error']){
                 return $return;
             }else{
@@ -305,50 +372,94 @@ class CheckoutBusiness
                         $return['message'] = 'Shop must be selected.';
                         return $return;
                     }else{
-                        $shop = Shop::find($shop_id);
-
-                        //Deliver the order
-                        if($deliverOrCollect == 'deliver'){
-                            if($shop->isOpen()){
-                                $return = CheckoutBusiness::validateDistance($shop_id, $phone, $postcode, $address);
-                                //Distance Error
-                                if($return['error']){
-                                    return $return;
-                                }else{
-                                    //Deliver success.
-                                    $checkout->delivery_phone = $phone;
-                                    $checkout->delivery_postcode = $postcode;
-                                    $checkout->delivery_address = $address;
-                                    $checkout->confirmed = true;
-                                    $checkout->new_order = true;
-                                    $checkout->update();
-
-                                    $return['error'] = false;
-                                    $return['message'] = 'Your order will be delivered in 30 minutes.';
-                                    return $return;
-                                }                                
-                            }else{
-                                //Deliver Time Error
-                                $return['error'] = true;
-                                $return['message'] = 'Unfortunately the selected shop is closed now.';
-                                return $return;
-                            }
-                        //Collect the order
+                        $return = CheckoutBusiness::validateTime($time, $shop_id, $checkout->deliver_or_collect);
+                        //Time Error
+                        if($return['error']){
+                            return $return;
                         }else{
-                            if($shop->isOpen()){
-                                //Collect Success
-                                $checkout->confirmed = true;
-                                $checkout->new_order = true;
-                                $checkout->update();
+                            $time = $return['time'];
+                            $shop = Shop::find($shop_id);
 
-                                $return['error'] = false;
-                                $return['message'] = 'Collect your order in our shop in 30 minutes.';
-                                return $return;
+                            //Deliver the order at the address
+                            if($checkout->deliver_or_collect == 'deliver_address'){
+                                if($shop->isOpen()){
+                                    $return = CheckoutBusiness::validateDistance($shop_id, $phone, $postcode, $address);
+                                    //Distance Error
+                                    if($return['error']){
+                                        return $return;
+                                    }else{
+                                        //Deliver success.
+                                        $checkout->delivery_phone = $phone;
+                                        $checkout->delivery_postcode = $postcode;
+                                        $checkout->delivery_address = $address;
+                                        $checkout->time_delivery_collect = $time;
+                                        $checkout->update();
+
+                                        $return['error'] = false;
+                                        $return['message'] = 'OK';
+                                        return $return;
+                                    }                              
+                                }else{
+                                    //Deliver Time Error
+                                    $return['error'] = true;
+                                    $return['message'] = 'Unfortunately the selected shop is closed now.';
+                                    return $return;
+                                }
+                            //Deliver the order at the table
+                            }else if($checkout->deliver_or_collect == 'deliver_table'){
+                                if($shop->isOpen()){
+                                    $msgError = CheckoutBusiness::validateTable($phone, $table_number);
+                                    if(strlen($msgError) != 0) {
+                                        //Required field error
+                                        $return['error'] = true;
+                                        $return['message'] = $msgError;
+                                        return $return;
+                                    }else{
+                                        //Deliver Table Success
+                                        $checkout->delivery_phone = $phone;
+                                        $checkout->delivery_postcode = $postcode;
+                                        $checkout->delivery_address = $address;
+                                        $checkout->time_delivery_collect = $time;
+                                        $checkout->update();
+
+                                        $return['error'] = false;
+                                        $return['message'] = 'OK';
+                                        return $return;
+                                    }
+                                }else{
+                                    //Collect Time Error
+                                    $return['error'] = true;
+                                    $return['message'] = 'Unfortunately the selected shop is closed now.';
+                                    return $return;
+                                }
+                            //Collect the order
                             }else{
-                                //Collect Time Error
-                                $return['error'] = true;
-                                $return['message'] = 'Unfortunately the selected shop is closed now.';
-                                return $return;
+                                if($shop->isOpen()){
+                                    $msgError = CheckoutBusiness::validateCollect($phone);
+                                    if(strlen($msgError) != 0) {
+                                        //Required field error
+                                        $return['error'] = true;
+                                        $return['message'] = $msgError;
+                                        return $return;
+                                    }else{
+                                        //Collect Success
+                                        $checkout->delivery_phone = $phone;
+                                        $checkout->delivery_postcode = $postcode;
+                                        $checkout->delivery_address = $address;
+                                        $checkout->time_delivery_collect = $time;
+                                        $checkout->update();
+
+                                        $return['error'] = false;
+                                        $return['message'] = 'OK';
+                                        return $return;
+                                    }
+                                    
+                                }else{
+                                    //Collect Time Error
+                                    $return['error'] = true;
+                                    $return['message'] = 'Unfortunately the selected shop is closed now.';
+                                    return $return;
+                                }
                             }
                         }
                     }
@@ -356,6 +467,182 @@ class CheckoutBusiness
             }
         }catch(Exception $e){
             Log::error('CheckoutBusiness.confirmCheckout: '.$e->getMessage());
+            $return['error'] = true;
+            $return['message'] = 'It was no possible complete your request. Please try again later...';
+            return $return;
+        }
+    }
+
+    public static function paymentConfirmation($user_id, $transactionId, $retrievalReference)
+	{
+        $return = CheckoutBusiness::shoppingCart($user_id, null);
+        if($return['error']){
+            return $return;
+        }else{
+            try{
+                if(isset($transactionId) && isset($retrievalReference)){
+                    $checkout = $return['checkout'];
+                    $checkout->confirmed = true;
+                    $checkout->new_order = true;
+                    $checkout->update();
+                    
+                    $paymentConfirmation = new PaymentConfirmation();
+                    $paymentConfirmation->checkout_id = $checkout->id;
+                    $paymentConfirmation->transaction_id = $transactionId;
+                    $paymentConfirmation->retrieval_reference = $retrievalReference;
+                    $paymentConfirmation->order_number = $checkout->user_id.$checkout->id;
+                    $paymentConfirmation->save();
+
+                    $return = CheckoutBusiness::sendInvoice($checkout);
+                    
+                    if($checkout->deliver_or_collect == 'deliver_address'){
+                        $return['error'] = false;
+                        $return['message'] = 'Please, make a note of your order number: '.$paymentConfirmation->order_number.'. Your order will be delivered at '.$checkout->time_delivery_collect.' at your address.';
+                        return $return;
+                    }else if($checkout->deliver_or_collect == 'deliver_table'){
+                        $return['error'] = false;
+                        $return['message'] = 'Please, make a note of your order number: '.$paymentConfirmation->order_number.'. Your order will be delivered in 15 minutes or less at your table.';
+                        return $return;
+                    }else{
+                        $return['error'] = false;
+                        $return['message'] = 'Please, make a note of your order number: '.$paymentConfirmation->order_number.'.  You can collect your order in our shop at '.$checkout->time_delivery_collect.'.';
+                        return $return;
+                    }
+                }else{
+                    $return['error'] = true;
+                    $return['message'] = 'It was no possible complete your request. Please try again later...';
+                    return $return;
+                }
+            }catch(Exception $e){
+                Log::error('CheckoutBusiness.paymentConfirmation: '.$e->getMessage());
+                $return['error'] = true;
+                $return['message'] = 'It was no possible complete your request. Please try again later...';
+                return $return;
+            }
+        }
+    }
+
+    private static function sendInvoice($checkout)
+    {
+        try{
+            $user = $checkout->user()->first();
+            $payment = $checkout->payment()->first();
+            $pdf_path = 'public/receipts/'.$user->id.'/'.$payment->order_number.'.pdf';
+
+            if(isset($checkout->checkout_message)){
+                $checkout->checkout_message = Util::splitText($checkout->checkout_message, 40, "\n");
+            }
+            
+            Util::sendMail($user->name, 'fthiagocdo@gmail.com', $user->email, 'Receipt', PDF::loadView('pdf.invoice', compact('checkout'))->output(), 'invoice.pdf');
+                    
+            $return['error'] = false;
+            $return['message'] = '';
+            return $return;
+        }catch(Exception $e){
+            Log::error('CheckoutBusiness.saveReceit: '.$e->getMessage());
+            $return['error'] = true;
+            $return['message'] = 'It was no possible complete your request. Please try again later...';
+            return $return;
+        }
+    }
+
+    public static function getLimitTimeOrder($shop_id)
+	{
+        try{
+            $shopSchedule = ShopSchedule::where('shop_id', '=', $shop_id)
+                ->where('day_week', '=', Carbon::now()->format('l'))
+                ->first();
+        
+            $hourInitial = (int) Carbon::now()->format('H');
+            $hourFinal = (int) substr($shopSchedule->closing_time, 0, strpos($shopSchedule->closing_time, ':'));
+            
+            $hourValues[0] = $hourInitial;
+            for($i = 1; $hourInitial < $hourFinal; $i++){
+                $hourValues[$i] = ++$hourInitial;
+            }
+
+            $minuteValues[0] = $minuteInitial = 0;
+            for($i = 1; $minuteInitial < 45; $i++){
+                $minuteValues[$i] = $minuteInitial = $minuteInitial + 15;
+            }
+
+            $return['error'] = false;
+            $return['message'] = 'OK';
+            $return['hourValues'] = $hourValues;
+            $return['minuteValues'] = $minuteValues;
+            return $return;
+        }catch(Exception $e){
+            Log::error('CheckoutBusiness.getLimitTimeOrder: '.$e->getMessage());
+            $return['error'] = true;
+            $return['message'] = 'It was no possible complete your request. Please try again later...';
+            return $return;
+        }
+    }
+
+    private static function validateTime($time, $shop_id, $delivery_or_collect)
+    {
+        try{
+            //Deliver table does not have time
+            if($delivery_or_collect == 'deliver_table'){
+                $return['error'] = false;
+                $return['message'] = "OK";
+                $return['time'] = Carbon::now()->addMinutes(15)->format('H:i');
+                return $return;
+            }else{
+                //For delivery address, minimun time is 30 minutes
+                if($delivery_or_collect == 'deliver_address'){
+                    $minimun_time = 30;
+                //For collect, minimun time is 15 minutes
+                }else{
+                    $minimun_time = 15;
+                }
+                
+                if(!isset($time)){
+                    $return['error'] = false;
+                    $return['message'] = "OK";
+                    $return['time'] = Carbon::now()->addMinutes($minimun_time)->format('H:i');
+                    return $return;
+                }else{
+                    $now = Carbon::now();
+                    $hour = (int) substr($time, 0, strpos($time, ':'));
+                    $minute = (int) substr($time, strpos($time, ':')+1);
+                    $time = Carbon::createFromTime($hour, $minute, null, 'Europe/London');
+                    //Data Invalid Error
+                    if($hour > 24 || $minute > 59){
+                        $return['error'] = true;
+                        $return['message'] = "Time not valid";
+                        return $return;
+                    }else{
+                        $shopSchedule = ShopSchedule::where('shop_id', '=', $shop_id)
+                            ->where('day_week', '=', Carbon::now()->format('l'))
+                            ->first();
+                    
+                        $hourClosing = (int) substr($shopSchedule->closing_time, 0, strpos($shopSchedule->closing_time, ':'));
+                        $minuteClosing = (int) substr($shopSchedule->closing_time, strpos($shopSchedule->closing_time, ':')+1);
+                        $timeClosing = Carbon::createFromTime($hourClosing, $minuteClosing, null, 'Europe/London');
+
+                        //Shop Closed Error
+                        if($time->diffInMinutes($timeClosing, false) <= 0){
+                            $return['error'] = true;
+                            $return['message'] = 'Sorry, but our shop will be closed at this time. Please inform a new time to delivery or collect.';
+                            return $return;
+                        //Time must respect minimum time
+                        }else if($now->diffInMinutes($time, false) < $minimun_time - 1){
+                            $return['error'] = true;
+                            $return['message'] = 'Sorry, but we need at least '.$minimun_time.' minutes to prepare your order. Please inform a new time to delivery or collect.';
+                            return $return;
+                        //Valid Time
+                        }else{
+                            $return['error'] = false;
+                            $return['message'] = "OK";
+                            $return['time'] = $time->format('H:i');
+                            return $return;
+                        }
+                    }
+                }
+            }
+        }catch(Exception $e){
+            Log::error('CheckoutBusiness.validateTime: '.$e->getMessage());
             $return['error'] = true;
             $return['message'] = 'It was no possible complete your request. Please try again later...';
             return $return;
@@ -414,6 +701,26 @@ class CheckoutBusiness
             return "Field 'postcode' must be filled.";
         } else if(!isset($address)){
             return "Field 'address' must be filled.";
+        }
+
+        return '';
+    }
+
+    private static function validateTable($phone, $table_number)
+    {
+        if(!isset($table_number)){
+            return "Field 'table number' must be filled.";
+        } else if(!isset($phone)){
+            return "Field 'phone' must be filled.";
+        } 
+
+        return '';
+    }
+
+    private static function validateCollect($phone)
+    {
+        if(!isset($phone)){
+            return "Field 'phone' must be filled.";
         }
 
         return '';

@@ -4,8 +4,8 @@
 <div class="row hide-on-med-and-up"></div>
 <div class="container container-content">
     <div class="row">
-        <h3 class="center-align hide-on-small-only">List of Schedules for {{ ucfirst($shop->name) }}</h3>
-        <h5 class="center-align hide-on-med-and-up">List of Schedules for {{ ucfirst($shop->name) }}</h3>
+        <h3 class="center-align hide-on-small-only">Opening Time for {{ ucfirst($shop->name) }}</h3>
+        <h5 class="center-align hide-on-med-and-up">Opening Time for {{ ucfirst($shop->name) }}</h3>
         <div class="divider"></div>
     </div>
     <div class="row hide-on-small-only">

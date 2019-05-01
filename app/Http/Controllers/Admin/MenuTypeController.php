@@ -10,10 +10,13 @@ use App\MenuType;
 
 class MenuTypeController extends Controller
 {
-    public function index($mode = null){
+    public function index(){
         if(auth()->user()->can('menu_list')){
-            $return = MenuBusiness::findMenuTypes(4);
+            $shops = Util::listShops(false);
+            $return = MenuBusiness::findMenuTypes($shops['list'][0]->id);
             return view('admin.menutype.index')
+                ->with('shops', $shops['list'])
+                ->with('shop_id', $shops['list'][0]->id)
                 ->with('registers', $return['list'])
                 ->with('currentMenu', 'menu');
         }else{
@@ -21,27 +24,43 @@ class MenuTypeController extends Controller
         }
     }
 
-    public function find($id, $mode = null)
+    public function shop(Request $request)
+    {
+        if(auth()->user()->can('menu_list')){
+            $data = $request->all();
+            $shops = Util::listShops(false);
+            $return = MenuBusiness::findMenuTypes($data['shop_id']);
+            return view('admin.menutype.index')
+                ->with('shops', $shops['list'])
+                ->with('shop_id', $data['shop_id'])
+                ->with('registers', $return['list'])
+                ->with('currentMenu', 'menu');
+        }else{
+            return Util::redirectHome();
+        }
+    }
+
+    public function find($id)
     {
         $register = MenuType::find($id);
 
-        if($mode == 'api'){
-            if(isset($register)){
-                return response()->json($register);
-            }else{
-                return response()->json([
-                    'messsage' => 'Register not found.',
-                    'status' => 'ERROR'
-                ]);
-            }
+        if(isset($register)){
+            return response()->json($register);
+        }else{
+            return response()->json([
+                'messsage' => 'Register not found.',
+                'status' => 'ERROR'
+            ]);
         }
     }
 
     public function add()
     {
         if(auth()->user()->can('menu_add')){
+            $shops = Util::listShops(false);
             return view('admin.menutype.add')
-            	->with(['previousPage' => 'admin.menutype']);
+                ->with('shops', $shops['list'])
+            	->with('previousPage', 'admin.menutype');
         }else{
            return Util::redirectHome();
         }
@@ -53,6 +72,7 @@ class MenuTypeController extends Controller
             $data = $request->all();
 
             $register = new MenuType();
+            $register->shop_id = $data['shop_id'];
             $register->name = $data['name'];
 
             $msgError = $this->validateMenuType($request);
@@ -81,11 +101,13 @@ class MenuTypeController extends Controller
     public function edit($id)
     {
         if(auth()->user()->can('menu_edit')){
+            $shops = Util::listShops(false);
 	        $register = MenuType::find($id);
 	        
 	        \Session::flash('register', $register);
 
             return view('admin.menutype.edit')
+                ->with('shops', $shops['list'])
             	->with(['previousPage' => 'admin.menutype']);
         }else{
            return Util::redirectHome();
@@ -99,7 +121,8 @@ class MenuTypeController extends Controller
 	        
 	        $data = $request->all();
 
-	        $register->name = $data['name'];
+            $register->name = $data['name'];
+            $register->shop_id = $data['shop_id'];
 
             $msgError = $this->validateMenuType($register);
             if(!isset($msgError)){
@@ -141,7 +164,9 @@ class MenuTypeController extends Controller
     //If there is not message error, it moves forward
     private function validateMenuType($request)
     {
-        if(!isset($request['name'])){
+        if(!isset($request['shop_id'])){
+            return 'All fields must be filled.';
+        }else if(!isset($request['name'])){
             return 'All fields must be filled.';
         }
 

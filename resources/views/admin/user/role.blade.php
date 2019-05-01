@@ -9,47 +9,47 @@
         <div class="divider"></div>
     </div>
     <div class="row hide-on-small-only">
-			<form action="{{ route('admin.user.role.add', $user->id) }}" method="post">
-				{{ csrf_field() }}
-				<div class="row valign-wrapper">
-					<div class="col s12 m4">
-						<div class="input-field">
-							<select name="role_id">
-								<option value=""></option>
-								@foreach($roles as $role)
-								<option value="{{ $role->id }}">{{ $role->name }}</option>
-								@endforeach
-							</select>
-							<label>Roles</label>
-						</div>
-					</div>
-					<div class="col s12 m8" style="height: 100%;">
-						<button class="btn waves-effect waves-light">Add</button>
-					</div>
-				</div>
-			</form>
-		</div>
-		<div class="row hide-on-med-and-up">
-			<form action="{{ route('admin.user.role.add', $user->id) }}" method="post">
-				{{ csrf_field() }}
-				<div class="row">
-					<div class="col s12 m4">
-						<div class="input-field">
-							<select name="role_id">
-								<option value=""></option>
-								@foreach($roles as $role)
-								<option value="{{ $role->id }}">{{ $role->name }}</option>
-								@endforeach
-							</select>
-							<label>Roles</label>
-						</div>
-					</div>
-					<div class="col s12 m8 center-align" style="height: 100%;">
-						<button class="btn waves-effect waves-light">Add</button>
-					</div>
-				</div>
-			</form>
-		</div>
+        <form action="{{ route('admin.user.role.add', $user->id) }}" method="post">
+            {{ csrf_field() }}
+            <div class="row valign-wrapper">
+                <div class="col s12 m4">
+                    <div class="input-field">
+                        <select name="role_id">
+                            <option value=""></option>
+                            @foreach($roles as $role)
+                            <option value="{{ $role->id }}">{{ $role->name }}</option>
+                            @endforeach
+                        </select>
+                        <label>Roles</label>
+                    </div>
+                </div>
+                <div class="col s12 m8" style="height: 100%;">
+                    <button class="btn waves-effect waves-light">Add</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="row hide-on-med-and-up">
+        <form action="{{ route('admin.user.role.add', $user->id) }}" method="post">
+            {{ csrf_field() }}
+            <div class="row">
+                <div class="col s12 m4">
+                    <div class="input-field">
+                        <select name="role_id">
+                            <option value=""></option>
+                            @foreach($roles as $role)
+                            <option value="{{ $role->id }}">{{ $role->name }}</option>
+                            @endforeach
+                        </select>
+                        <label>Roles</label>
+                    </div>
+                </div>
+                <div class="col s12 m8 center-align" style="height: 100%;">
+                    <button class="btn waves-effect waves-light">Add</button>
+                </div>
+            </div>
+        </form>
+    </div>
     <div class="row hide-on-small-only">
         <table class="table striped">
             <thead>

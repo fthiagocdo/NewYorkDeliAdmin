@@ -9,6 +9,54 @@
         <div class="divider"></div>
     </div>
     <div class="row hide-on-small-only">
+        <form action="{{ route('admin.menutype.shop') }}" method="post">
+            {{ csrf_field() }}
+            <div class="row valign-wrapper">
+                <div class="col s12 m4">
+                    <div class="input-field">
+                        <select name="shop_id">
+                            @foreach($shops as $shop)
+                            @if($shop_id == $shop->id)
+                            <option value="{{ $shop->id }}" selected>{{ $shop->name }}</option>
+                            @else
+                            <option value="{{ $shop->id }}">{{ $shop->name }}</option>
+                            @endif
+                            @endforeach
+                        </select>
+                        <label>Shops</label>
+                    </div>
+                </div>
+                <div class="col s12 m8" style="height: 100%;">
+                    <button class="btn waves-effect waves-light">Confirm</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="row hide-on-med-and-up">
+        <form action="{{ route('admin.menutype.shop') }}" method="post">
+            {{ csrf_field() }}
+            <div class="row">
+                <div class="col s12 m4">
+                    <div class="input-field">
+                        <select name="shop_id">
+                            @foreach($shops as $shop)
+                            @if($shop_id == $shop->id)
+                            <option value="{{ $shop->id }}" selected>{{ $shop->name }}</option>
+                            @else
+                            <option value="{{ $shop->id }}">{{ $shop->name }}</option>
+                            @endif
+                            @endforeach
+                        </select>
+                        <label>Shops</label>
+                    </div>
+                </div>
+                <div class="col s12 m8 center-align" style="height: 100%;">
+                    <button class="btn waves-effect waves-light">Confirm</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="row hide-on-small-only">
         <table class="table striped">
             <thead>
                 <tr>
@@ -19,7 +67,7 @@
             <tbody>
             @foreach($registers as $register)
                 <tr>
-                    <td>{{ ucfirst($register->name) }}</register>
+                    <td>{{ ucfirst($register->name) }}</td>
                     <td>
                         <a class="btn-icon" href="{{ route('admin.menutype.menuitem', $register->id) }}" title="roles"><i class="small material-icons">assignment</i></a>
                         <a class="btn-icon" href="{{ route('admin.menutype.edit', $register->id) }}"><i class="small material-icons">edit</i></a>

@@ -27,6 +27,11 @@ class PermissionsSeeds extends Seeder
         		'name'=>'user_edit', 
         		'description'=>'Edit User']);
         }
+        if(!Permission::where('name', '=', 'user_add')->count()){
+            $admin = Permission::create([
+                'name'=>'user_add', 
+                'description'=>'Add Users']);
+        }
 
         if(!Permission::where('name', '=', 'roles_list')->count()){
         	$admin = Permission::create([

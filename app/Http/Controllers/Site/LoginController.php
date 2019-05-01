@@ -35,41 +35,6 @@ class LoginController extends Controller
 		}
     }
 
-    public function signup() 
-	{
-		return view('site.login.signup')
-            ->with('currentMenu', 'login');
-	}
-
-	public function createUser(Request $request) 
-	{
-        $data = $request->all();
-        $data['provider'] = 'email';
-
-        if($request->file('image-med')){
-            $path = $request->file('image-med')->store('public/avatars');
-            $data['avatar'] = $path;
-        }else if($request->file('image-mobile')){
-            $path = $request->file('image-mobile')->store('public/avatars');
-            $data['avatar'] = $path;
-        }
-
-		$return = UserBusiness::createUser($data);
-        
-		if($return['error']){
-			return redirect()->back()
-                ->with('message', $return['message'])
-                ->with('typeMessage', 'red white-text')
-                ->with('avatar', isset($data['avatar']) ? $data['avatar'] : '')
-                ->with('name', isset($data['name']) ? $data['name'] : '')
-                ->with('email', isset($data['email']) ? $data['email'] : '');
-		}else{
-            return redirect()->route('site.login')
-                ->with('message', $return['message'])
-                ->with('typeMessage', 'green white-text');
-		}
-	}
-
 	public function redirectToProvider($provider)
     {
         return Socialite::driver($provider)->redirect();

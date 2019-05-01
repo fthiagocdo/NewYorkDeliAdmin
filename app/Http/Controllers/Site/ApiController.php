@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth; 
 use App\Business\MenuBusiness;
 use App\Business\CheckoutBusiness;
+use App\Business\OrderBusiness;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Admin\MenuExtraController;
 use App\Http\Controllers\Admin\MenuItemController;
@@ -26,20 +28,38 @@ use App\CheckoutItemExtra;
 
 class ApiController extends Controller
 {
+    /*public function login(){
+        if(Auth::attempt(['email' => request('email'), 'password' => request('uid')])){ 
+            $user = Auth::user(); 
+            $success['token'] =  $user->createToken('MyApp')-> accessToken; 
+            return response()->json(['success' => $success], 200); 
+        }else{ 
+            return response()->json(['error'=>'Unauthorised'], 401); 
+        } 
+    }
+
+    public function findUser(){ 
+        $user = Auth::user(); 
+        return response()->json(['success' => $user], 200); 
+    } */
+
     public function findOrCreateUser(Request $request)
     {
         $name = str_replace("%20", " ", $request['name']);
         $email = str_replace("%20", " ", $request['email']);
         $phone_number = str_replace("%20", " ", $request['phoneNumber']);
         $avatar = str_replace("%20", " ", $request['avatar']);
+        $uid = str_replace("%20", " ", $request['uid']);
         $password = str_replace("%20", " ", $request['password']);
         $provider = str_replace("%20", " ", $request['provider']);
 
-        $authUser = User::where('email', '=', $email)->first();
-        
-        if($authUser){
+        /* Get Token */
+        if(Auth::attempt(['email' => request('email'), 'password' => request('uid')])){ 
+            $user = Auth::user(); 
+            $token =  $user->createToken('MyApp')-> accessToken;  
             return response()->json([
-                'user' => $authUser,
+                'user' => $user,
+                'token' => $token,
                 'error' => false
             ], 200);
         }else{
@@ -69,7 +89,8 @@ class ApiController extends Controller
                 }else{
                     $user->avatar = $avatar;
                 }
-                $user->password = bcrypt($password);
+                /*Password == Firebase UID*/
+                $user->password = bcrypt($uid);
                 $user->shop_id = Shop::all()->first()->id;
                 $user->provider = $provider;
                 $user->save();
@@ -225,9 +246,9 @@ class ApiController extends Controller
         return (new MenuExtraController())->find($id, 'api');
     }
 
-    public function listMenuItem($menutype_id, $preferredShop_id)
+    public function listMenuItem($menutype_id)
     {
-        return MenuBusiness::findMenuItem($menutype_id, $preferredShop_id);
+        return MenuBusiness::findMenuItem($menutype_id);
     }
 
     public function getMenuItemImage($id)
@@ -245,14 +266,14 @@ class ApiController extends Controller
         return (new MenuTypeController())->find($id, 'api');
     }
 
-    public function listOrderHistory($user_id)
+    public function listOrderHistory($user_id, $shop_id)
     {
-        return (new OrderHistoryController())->index($user_id, 'api');
+        return OrderBusiness::listOrderHistory($user_id, $shop_id);
     }
 
     public function findOrderHistory($id)
     {   
-        return (new OrderHistoryController())->details($id, 'api');
+        return OrderBusiness::getOrderDetails($id);
     }
 
     public function orderAgain($id, $user_id)
@@ -263,7 +284,7 @@ class ApiController extends Controller
 
 		if(isset($lastCheckout)){
 			$lastCheckout->delete();
-		}
+        }
 
 		$checkout = Checkout::find($id);
 		
@@ -299,8 +320,8 @@ class ApiController extends Controller
 				$newCheckoutItemExtra->save();
 			}
 		}
-
-		return (new CheckoutController())->shoppingCart($user_id, 'api');
+        
+		return $this->getShoppingCart($user_id, null);
 	}
 
     public function getOrderItems($id)
@@ -308,19 +329,19 @@ class ApiController extends Controller
         return (new OrderHistoryController())->getOrderItems($id, 'api');
     }
 
-    public function getShoppingCart($user_id)
+    public function getShoppingCart($user_id, $shop_id)
     {
-        return CheckoutBusiness::shoppingCart($user_id);
+        return CheckoutBusiness::shoppingCart($user_id, $shop_id);
     }
 
-    public function addItemToShoppingCart(Request $request, $user_id)
+    public function addItemToShoppingCart(Request $request, $user_id, $shop_id)
     {
         $data = $request->all();
         $menuExtras = explode(',', $data['menuExtras']);
         foreach($menuExtras as $menuextra_id){
             $data['menuextra_'.$menuextra_id] = $menuextra_id;
         }
-        return CheckoutBusiness::addItem($data, $user_id);
+        return CheckoutBusiness::addItem($data, $user_id, $shop_id);
     }
 
     public function removeItemFromShoppingCart($user_id, $checkoutitem_id)
@@ -348,6 +369,27 @@ class ApiController extends Controller
         return CheckoutBusiness::minusTip($user_id);
     }
 
+    public function deliverOrCollect(Request $request, $user_id)
+    {
+        if($request['deliverOrCollect'] == 'null'  || $request['deliverOrCollect'] == ''){
+            $deliverOrCollect = 'deliver_address';
+        }else{
+            $deliverOrCollect = $request['deliverOrCollect'];
+        }
+        return CheckoutBusiness::deliverOrCollect($user_id, $deliverOrCollect);
+    }
+
+    public function checkoutMessage(Request $request, $user_id)
+    {
+        if($request['checkoutMessage'] == 'null' || $request['checkoutMessage'] == ''){
+            $checkout_message = null;
+        }else{
+            $checkout_message = str_replace("%20", " ", $request['checkoutMessage']);
+        }
+        
+        return CheckoutBusiness::checkoutMessage($user_id, $checkout_message);
+    }
+
     public function confirmCheckout(Request $request, $user_id, $shop_id)
     {
         if($request['phone'] == 'null' || $request['phone'] == ''){
@@ -365,13 +407,23 @@ class ApiController extends Controller
         }else{
             $address = str_replace("%20", " ", $request['address']);
         }
-        if($request['deliverOrCollect'] == 'null'  || $request['deliverOrCollect'] == ''){
-            $deliverOrCollect = null;
+        if($request['tableNumber'] == 'null'  || $request['tableNumber'] == ''){
+            $tableNumber = null;
         }else{
-            $deliverOrCollect = $request['deliverOrCollect'];
+            $tableNumber = str_replace("%20", " ", $request['tableNumber']);
+        }
+        if($request['time'] == 'null'  || $request['time'] == ''){
+            $time = null;
+        }else{
+            $time = str_replace("%20", " ", $request['time']);
         }
         
-        return CheckoutBusiness::confirmCheckout($user_id, $shop_id, $deliverOrCollect, $phone, $postcode, $address);
+        return CheckoutBusiness::confirmCheckout($user_id, $shop_id, $time, $phone, $postcode, $address, $tableNumber);
+    }
+
+    public function getLimitTimeOrder($shop_id)
+    {
+        return CheckoutBusiness::getLimitTimeOrder($shop_id);
     }
 
     public function listShops($openedShops)
@@ -381,7 +433,48 @@ class ApiController extends Controller
 
     public function sendMail(Request $request)
     {
-        $data = $request->all();
-        return Util::sendMail($data);
+        if($request['name'] == 'null' || $request['name'] == ''){
+            $name = null;
+        }else{
+            $name = str_replace("%20", " ", $request['name']);
+        }
+        if($request['sender'] == 'null' || $request['sender'] == ''){
+            $sender = null;
+        }else{
+            $sender = str_replace("%20", " ", $request['sender']);
+        }
+        if($request['receiver'] == 'null' || $request['receiver'] == ''){
+            $receiver = null;
+        }else{
+            $receiver = str_replace("%20", " ", $request['receiver']);
+        }
+        if($request['message'] == 'null' || $request['message'] == ''){
+            $message = null;
+        }else{
+            $message = str_replace("%20", " ", $request['message']);
+        }
+        
+        return Util::sendMail($name, $sender, $receiver, $message, null, null);
+    }
+
+    public function listCountries()
+    {
+        return Util::listCountries();
+    }
+
+    public function paymentConfirmation(Request $request, $user_id)
+    {
+        if($request['transactionId'] == 'null' || $request['transactionId'] == ''){
+            $transactionId = null;
+        }else{
+            $transactionId = str_replace("%20", " ", $request['transactionId']);
+        }
+        if($request['retrievalReference'] == 'null' || $request['retrievalReference'] == ''){
+            $retrievalReference = null;
+        }else{
+            $retrievalReference = str_replace("%20", " ", $request['retrievalReference']);
+        }
+        
+        return CheckoutBusiness::paymentConfirmation($user_id, $transactionId, $retrievalReference);
     }
 }

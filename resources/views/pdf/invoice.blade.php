@@ -6,10 +6,16 @@
     <title>New York Deli</title>
 </head>
 <body style="width: 300px;">
-	<p style="margin: 5px;"><strong>Customer</strong>: {{ ucwords($checkout->user->name) }}</p>
-	<p style="margin: 5px;"><strong>Phone Number</strong>: {{ $checkout->delivery_phone }}</p>
-	<p style="margin: 5px;"><strong>Address</strong>: {{ ucwords($checkout->delivery_address).', '.strtoupper($checkout->delivery_postcode) }}</p>
-	<p style="margin: 5px;"><strong>{{ $checkout->delivery_fee != 0 ? 'ORDER TO DELIVER AT' : 'ORDER TO COLLECT AT' }} {{ $stringDate }}</strong></p>
+	<p style="margin: 5px;"><strong>Order Number:</strong> {{ ucwords($checkout->payment->order_number) }}</p>
+	<p style="margin: 5px;"><strong>Customer:</strong> {{ ucwords($checkout->user->name) }}</p>
+	<p style="margin: 5px;"><strong>Phone Number:</strong> {{ $checkout->delivery_phone }}</p>
+	@if($checkout->deliver_or_collect == 'deliver_address')
+	<p style="margin: 5px;"><strong>Address:</strong> {{ ucwords($checkout->delivery_address).', '.strtoupper($checkout->delivery_postcode) }}</p>
+	@endif
+	@if($checkout->deliver_or_collect == 'deliver_table')
+	<p style="margin: 5px;"><strong>Table Number:</strong> {{ $checkout->table_number }}</p>
+	@endif
+	<p style="margin: 5px;"><strong>{{ $checkout->deliver_or_collect == 'deliver_address' || $checkout->deliver_or_collect == 'deliver_table' ? 'ORDER TO DELIVER AT' : 'ORDER TO COLLECT AT' }} {{ $checkout->time_delivery_collect }}</strong></p>
 	<div style="height: 1px; overflow: hidden; background-color: black;"></div>
 	@foreach($checkout->checkoutItems as $checkoutItem)
 	<p style="margin: 5px;"><strong>{{ $checkoutItem->menuItem->name }} x{{ $checkoutItem->quantity }}</strong><span style="float: right;">&pound; {{ number_format($checkoutItem->total_price, 2, '.', ',') }}</span></p>
@@ -25,6 +31,10 @@
 	</ul>
 	@endif
 	@endforeach
+	@if(isset($checkout->checkout_message))
+	<div style="height: 1px; overflow: hidden; background-color: black;"></div>
+	<p style="margin: 5px;">{{ $checkout->checkout_message }}</p>
+	@endif
 	<div style="height: 1px; overflow: hidden; background-color: black;"></div>
 	<p style="margin: 5px;"><strong>Subtotal:</strong><span style="float: right;">&pound; {{ number_format($checkout->partial_value, 2, '.', ',') }}</span></p>
 	<p style="margin: 5px;"><strong>Delivery Fee:</strong><span style="float: right;">&pound; {{ number_format($checkout->delivery_fee, 2, '.', ',') }}</span></p>

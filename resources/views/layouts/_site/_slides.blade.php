@@ -1,4 +1,4 @@
-<div class="row hide-on-small-only" style="margin-bottom: 0px">
+<div class="row hide-on-small-only" style="margin-bottom: 0px; padding: 0px 0px 10px 0px;">
 	<div class="col m8" style="padding: 0px;">
 		<div class="slider">
 			<ul class="slides">

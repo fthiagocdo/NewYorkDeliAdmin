@@ -19,8 +19,11 @@
               <li class="link"><a href="{{ route('site.login') }}">Login</a></li>
               @else
               <li class="link"><a href="{{ route('admin.user.edit', Auth::user()->id) }}">Profile</a></li>
-              <li class="link"><a href="{{ route('site.checkout.shoppingcart') }}">Checkout</a></li>
-              <li class="link"><a href="{{ route('admin.orderhistory') }}">Order History</a></li>
+              <!--
+                Removed at 11/02/19
+              <li class="link"><a href="route('site.checkout.shoppingcart') }}">Checkout</a></li>
+              <li class="link"><a href="route('admin.orderhistory') }}">Order History</a></li>
+              -->
               <li class="link"><a href="{{ route('admin.logout') }}">Logout</a></li>
               @endif
             </ul>
@@ -40,7 +43,7 @@
               <li class="link"><a href="{{ route('admin.menutype') }}">Menu</a></li>
               @endcan
               @can('orders_list')
-              <li class="link"><a href="{{ route('admin.order') }}">Orders</a></li>
+              <li class="link"><a href="{{ route('admin.order.shop') }}">Orders</a></li>
               @endcan
             </ul>
           </div>

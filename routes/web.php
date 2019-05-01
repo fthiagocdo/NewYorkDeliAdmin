@@ -1,20 +1,26 @@
 <?php
 
 Route::get('/', ['as'=>'site.home', 'uses'=>'Site\HomeController@index']);
+Route::post('/', ['as'=>'site.home', 'uses'=>'Site\HomeController@index']);
 Route::get('/contactus', ['as'=>'site.contactus', 'uses'=>'Site\HomeController@contactUs']);
 Route::post('/contactus/send', ['as'=>'site.contactus.send', 'uses'=>'Site\HomeController@sendMessage']);
 
 Route::get('/login', ['as'=>'site.login', 'uses'=>'Site\LoginController@index']);
 Route::post('/login', ['as'=>'site.login', 'uses'=>'Site\LoginController@login']);
+/*Removed at 20/02/19
 Route::get('/login/auth/{provider}', ['as'=>'site.login.social', 'uses'=>'Site\LoginController@redirectToProvider']);
 Route::get('/login/auth/{provider}/return', ['as'=>'site.login.social.retorno', 'uses'=>'Site\LoginController@handleProviderCallback']);
+*/
 Route::get('/login/forgotpassword', ['as'=>'site.login.forgot', 'uses'=>'Site\LoginController@forgotPassword']);
 Route::post('/login/forgotpassword', ['as'=>'site.login.forgot', 'uses'=>'Site\LoginController@resetPassword']);
 Route::get('/login/changepassword/{token}', ['as'=>'site.login.change', 'uses'=>'Site\LoginController@changePassword']);
 Route::post('/login/changepassword/{user_id}', ['as'=>'site.login.save', 'uses'=>'Site\LoginController@savePassword']);
+/*Removed at 20/02/19
 Route::get('/login/signup', ['as'=>'site.login.signup', 'uses'=>'Site\LoginController@signup']);
 Route::post('/login/create', ['as'=>'site.login.create', 'uses'=>'Site\LoginController@createUser']);
+*/
 
+/*Removed at 11/02/19
 Route::get('/site/checkout/shoppingcart', ['as'=>'site.checkout.shoppingcart', 'uses'=>'Site\CheckoutController@shoppingCart']);
 Route::post('/site/checkout/additem', ['as'=>'site.checkout.additem', 'uses'=>'Site\CheckoutController@addItem']);
 Route::get('/site/checkout/removeitem/{id}', ['as'=>'site.checkout.removeitem', 'uses'=>'Site\CheckoutController@removeItem']);
@@ -25,7 +31,7 @@ Route::get('/site/checkout/minustip', ['as'=>'site.checkout.minustip', 'uses'=>'
 Route::post('/site/checkout/confirm', ['as'=>'site.checkout.confirm', 'uses'=>'Site\CheckoutController@confirm']);
 Route::get('/site/checkout/address/{preferredShop}', ['as'=>'site.checkout.address', 'uses'=>'Site\CheckoutController@address']);
 Route::put('/site/checkout/confirmAddress', ['as'=>'site.checkout.confirmAddress', 'uses'=>'Site\CheckoutController@confirmAddress']);
-
+*/
 
 Route::group(['middleware'=>'auth'], function(){
 
@@ -34,6 +40,8 @@ Route::group(['middleware'=>'auth'], function(){
 
 	Route::get('/admin/user', ['as'=>'admin.user', 'uses'=>'Admin\UserController@index']);
 	Route::get('/admin/user/details/{id}', ['as'=>'admin.user.details', 'uses'=>'Admin\UserController@details']);
+	Route::get('/admin/user/add', ['as'=>'admin.user.add', 'uses'=>'Admin\UserController@add']);
+	Route::post('/admin/user/save', ['as'=>'admin.user.save', 'uses'=>'Admin\UserController@save']);
 	Route::get('/admin/user/edit/{id}', ['as'=>'admin.user.edit', 'uses'=>'Admin\UserController@edit']);
 	Route::put('/admin/user/update/{id}', ['as'=>'admin.user.update', 'uses'=>'Admin\UserController@update']);
 	Route::get('/admin/user/delete/{id}', ['as'=>'admin.user.delete', 'uses'=>'Admin\UserController@delete']);
@@ -58,6 +66,7 @@ Route::group(['middleware'=>'auth'], function(){
 	Route::get('/admin/menutype/edit/{id}', ['as'=>'admin.menutype.edit', 'uses'=>'Admin\MenuTypeController@edit']);
 	Route::put('/admin/menutype/update/{id}', ['as'=>'admin.menutype.update', 'uses'=>'Admin\MenuTypeController@update']);
 	Route::get('/admin/menutype/delete/{id}', ['as'=>'admin.menutype.delete', 'uses'=>'Admin\MenuTypeController@delete']);
+	Route::post('/admin/menutype/shop', ['as'=>'admin.menutype.shop', 'uses'=>'Admin\MenuTypeController@shop']);
 	
 	Route::get('/admin/menutype/menuitem/{menutype_id}', ['as'=>'admin.menutype.menuitem', 'uses'=>'Admin\MenuItemController@index']);
 	Route::get('/admin/menutype/menuitem/add/{menutype_id}', ['as'=>'admin.menutype.menuitem.add', 'uses'=>'Admin\MenuItemController@add']);
@@ -85,11 +94,16 @@ Route::group(['middleware'=>'auth'], function(){
 	Route::get('/admin/shop/shopschedule/edit/{id}', ['as'=>'admin.shop.shopschedule.edit', 'uses'=>'Admin\ShopScheduleController@edit']);
 	Route::put('/admin/shop/shopschedule/update/{id}', ['as'=>'admin.shop.shopschedule.update', 'uses'=>'Admin\ShopScheduleController@update']);
 	Route::get('/admin/shop/shopschedule/delete/{id}', ['as'=>'admin.shop.shopschedule.delete', 'uses'=>'Admin\ShopScheduleController@delete']);
-
-	Route::get('/admin/order', ['as'=>'admin.order', 'uses'=>'Admin\OrderController@index']);
+	Route::get('/admin/shop/paymentsetup/{shop_id}', ['as'=>'admin.shop.paymentsetup', 'uses'=>'Admin\ShopController@paymentSetup']);
+	Route::post('/admin/shop/paymentsetup/save/{shop_id}', ['as'=>'admin.shop.paymentsetup.save', 'uses'=>'Admin\ShopController@savePaymentSetup']);
+	
+	Route::get('/admin/order/orders/{shop_id}', ['as'=>'admin.order.orders', 'uses'=>'Admin\OrderController@index']);
 	Route::get('/admin/order/print/{id}', ['as'=>'admin.order.print', 'uses'=>'Admin\OrderController@print']);
+	Route::get('/admin/order/shop', ['as'=>'admin.order.shop', 'uses'=>'Admin\OrderController@shop']);
 
+	/*Removed at 11/02/19
 	Route::get('/admin/orderhistory', ['as'=>'admin.orderhistory', 'uses'=>'Admin\OrderHistoryController@index']);
 	Route::get('/admin/orderhistory/details/{id}', ['as'=>'admin.orderhistory.details', 'uses'=>'Admin\OrderHistoryController@details']);
 	Route::get('/admin/orderhistory/orderagain/{id}', ['as'=>'admin.orderhistory.orderagain', 'uses'=>'Admin\OrderHistoryController@orderagain']);
+	*/
 });

@@ -11,7 +11,7 @@ use App\MenuItem;
 class MenuBusiness
 {
 	public static function findMenuTypes($preferredShop_id){
-        $list = MenuType::where('shop', $preferredShop_id)
+        $list = MenuType::where('shop_id', $preferredShop_id)
             ->orderBy('name', 'asc')
             ->get();
 
@@ -28,10 +28,8 @@ class MenuBusiness
         } 
     }
 
-    public static function findMenuItem($menutype_id, $preferredShop_id){
-        $list = MenuItem::where('menutype_id', $menutype_id)
-            ->where('shop', $preferredShop_id)
-            ->get();
+    public static function findMenuItem($menutype_id){
+        $list = MenuItem::where('menutype_id', $menutype_id)->get();
         
         if($list->count()){
             $return['error'] = false;
@@ -47,20 +45,27 @@ class MenuBusiness
     }
 
     public static function findMenuExtra($menuitem_id){
-        $menuItem = MenuItem::find($menuitem_id);
-        $list = $menuItem->menuExtras;
+        try{
+            $menuItem = MenuItem::find($menuitem_id);
+            $list = $menuItem->menuExtras;
 
-        if($list->count()){
-            $return['error'] = false;
-            $return['message'] = 'OK';
-            $return['list'] = $list;
-            return $return;
-        }else{
+            if($list->count()){
+                $return['error'] = false;
+                $return['message'] = 'OK';
+                $return['list'] = $list;
+                return $return;
+            }else{
+                $return['error'] = false;
+                $return['message'] = 'No records found.';
+                $return['list'] = $list;
+                return $return;
+            } 
+        }catch(Exception $e){
+            Log::error('MenuBusiness.findMenuExtra: '.$e->getMessage());
             $return['error'] = true;
-            $return['message'] = 'No records found.';
-            $return['list'] = $list;
+            $return['message'] = 'It was no possible complete your request. Please try again later...';
             return $return;
-        } 
+        }
     }
 
     public static function getMenuItemImage($id)

@@ -60,10 +60,13 @@
 						    <li class="{{ isset($currentMenu) && $currentMenu == 'menu' ? 'item-menu-active' : 'item-menu' }}"><a href="{{ route('admin.menutype') }}"><i class="material-icons">list</i>Menu</a></li>
 						    @endcan
 						    @can('orders_list')
-						    <li class="{{ isset($currentMenu) && $currentMenu == 'orders' ? 'item-menu-active' : 'item-menu' }}"><a href="{{ route('admin.order') }}"><i class="material-icons">print</i>Print Orders</a></li>
+						    <li class="{{ isset($currentMenu) && $currentMenu == 'orders' ? 'item-menu-active' : 'item-menu' }}"><a href="{{ route('admin.order.shop') }}"><i class="material-icons">print</i>Print Orders</a></li>
 						    @endcan
-						    <li class="{{ isset($currentMenu) && $currentMenu == 'orderhistory' ? 'item-menu-active' : 'item-menu' }}"><a href="{{ route('admin.orderhistory') }}"><i class="material-icons">receipt</i>Order History</a></li>
-						    <li class="{{ isset($currentMenu) && $currentMenu == 'checkout' ? 'item-menu-active' : 'item-menu' }}"><a href="{{ route('site.checkout.shoppingcart') }}"><i class="material-icons">shopping_cart</i>Checkout</a></li>
+							<!--
+								Removed at 11/02/19
+						    <li class="{{ isset($currentMenu) && $currentMenu == 'orderhistory' ? 'item-menu-active' : 'item-menu' }}"><a href="route('admin.orderhistory') }}"><i class="material-icons">receipt</i>Order History</a></li>
+						    <li class="{{ isset($currentMenu) && $currentMenu == 'checkout' ? 'item-menu-active' : 'item-menu' }}"><a href="route('site.checkout.shoppingcart') }}"><i class="material-icons">shopping_cart</i>Checkout</a></li>
+							-->
 						    <li class="{{ isset($currentMenu) && $currentMenu == 'logout' ? 'item-menu-active' : 'item-menu' }}"><a href="{{ route('admin.logout') }}"><i class="material-icons">exit_to_app</i>Logout</a></li>
 						    @endif
 						</ul>
@@ -116,10 +119,13 @@
 		    <li class="{{ isset($currentMenu) && $currentMenu == 'menu' ? 'item-menu-active' : 'item-menu' }}"><a href="{{ route('admin.menutype') }}"><i class="material-icons">list</i>Menu</a></li>
 		    @endcan
 		    @can('orders_list')
-		    <li class="{{ isset($currentMenu) && $currentMenu == 'orders' ? 'item-menu-active' : 'item-menu' }}"><a href="{{ route('admin.order') }}"><i class="material-icons">print</i>Print Orders</a></li>
+		    <li class="{{ isset($currentMenu) && $currentMenu == 'orders' ? 'item-menu-active' : 'item-menu' }}"><a href="{{ route('admin.order.shop') }}"><i class="material-icons">print</i>Print Orders</a></li>
 		    @endcan
-		    <li class="{{ isset($currentMenu) && $currentMenu == 'orderhistory' ? 'item-menu-active' : 'item-menu' }}"><a href="{{ route('admin.orderhistory') }}"><i class="material-icons">receipt</i>Order History</a></li>
-		    <li class="{{ isset($currentMenu) && $currentMenu == 'checkout' ? 'item-menu-active' : 'item-menu' }}"><a href="{{ route('site.checkout.shoppingcart') }}"><i class="material-icons">shopping_cart</i>Checkout</a></li>
+			<!--
+				Removed at 11/02/19
+		    <li class="{{ isset($currentMenu) && $currentMenu == 'orderhistory' ? 'item-menu-active' : 'item-menu' }}"><a href="route('admin.orderhistory') }}"><i class="material-icons">receipt</i>Order History</a></li>
+		    <li class="{{ isset($currentMenu) && $currentMenu == 'checkout' ? 'item-menu-active' : 'item-menu' }}"><a href="route('site.checkout.shoppingcart') }}"><i class="material-icons">shopping_cart</i>Checkout</a></li>
+			-->
 		    <li class="{{ isset($currentMenu) && $currentMenu == 'logout' ? 'item-menu-active' : 'item-menu' }}"><a href="{{ route('admin.logout') }}"><i class="material-icons">exit_to_app</i>Logout</a></li>
 		    @endif
 	    </ul>

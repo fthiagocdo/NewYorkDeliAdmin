@@ -15,14 +15,20 @@ use App\MenuType;
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        //dd($request);
         $shops = Util::listShops(false);
-        $return = MenuBusiness::findMenuTypes($shops['list'][0]->id);
+        $data = $request->all();
+        if(isset($data['shop_id'])){
+            $shop_id = $data['shop_id'];
+        }else{
+            $shop_id = $shops['list'][0]->id;
+        }
+        $return = MenuBusiness::findMenuTypes($shop_id);
 
         return view('site.home')
-        ->with('shops', $shops['list'])
+            ->with('shops', $shops['list'])
+            ->with('shop_id', $shop_id)
             ->with('menutypes', $return['list'])
     		->with('currentMenu', 'home');
     }
