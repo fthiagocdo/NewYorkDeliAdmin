@@ -12,7 +12,7 @@ class Checkout extends Model
 {
     public function shop()
     {
-        return $this->belongsTo(Shop::class, 'shop_id');
+        return $this->belongsTo(Shop::class, 'shop_id')->first();
     }
 
     public function user()

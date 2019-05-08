@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Util\Util;
+use App\Business\CheckoutBusiness;
 use App\Checkout;
 use App\Shop;
 use App\ShopSchedule;
@@ -85,5 +86,43 @@ class OrderBusiness
             $return['message'] = $e->getMessage();//'It was no possible complete your request. Please try again later...';
             return $return;
         }
+    }
+    
+    public static function orderAgain($id, $user_id)
+	{
+		$lastCheckout = Checkout::where('user_id', '=', $user_id)
+			->where('confirmed', '=', false)
+			->first();
+        
+        if(isset($lastCheckout)){
+			$lastCheckout->delete();
+        }
+
+        $checkout = Checkout::find($id);
+        $result = CheckoutBusiness::shoppingCart($user_id, $checkout->shop()->id);
+        $newCheckout = $result['checkout'];
+        $newCheckout->partial_value = $checkout->partial_value;
+		$newCheckout->total_value = $checkout->partial_value + $newCheckout->delivery_fee + $newCheckout->rider_tip;
+		$newCheckout->save();
+
+		foreach ($checkout->checkoutItems as $checkoutItem) {
+			$newCheckoutItem = new CheckoutItem();
+			$newCheckoutItem->checkout_id = $newCheckout->id;
+			$newCheckoutItem->unitary_price = $checkoutItem->unitary_price;
+			$newCheckoutItem->quantity = $checkoutItem->quantity;
+			$newCheckoutItem->total_price = $checkoutItem->total_price;
+			$newCheckoutItem->menuitem_id = $checkoutItem->menuitem_id;
+			$newCheckoutItem->save();
+
+			foreach ($checkoutItem->checkoutItemExtras as $checkoutItemExtra) {
+				$newCheckoutItemExtra = new CheckoutItemExtra();
+				$newCheckoutItemExtra->checkoutitem_id = $newCheckoutItem->id;
+				$newCheckoutItemExtra->price = $checkoutItemExtra->price;
+				$newCheckoutItemExtra->menuextra_id = $checkoutItemExtra->menuextra_id;
+				$newCheckoutItemExtra->save();
+			}
+		}
+        
+		return CheckoutBusiness::shoppingCart($user_id, $checkout->shop()->id);
 	}
 }

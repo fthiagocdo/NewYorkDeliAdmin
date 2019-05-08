@@ -7,11 +7,13 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
 use App\MenuType;
 use App\MenuItem;
+use App\MenuExtra;
 
 class MenuBusiness
 {
 	public static function findMenuTypes($preferredShop_id){
         $list = MenuType::where('shop_id', $preferredShop_id)
+            ->where('deleted', 'false')
             ->orderBy('name', 'asc')
             ->get();
 
@@ -29,7 +31,9 @@ class MenuBusiness
     }
 
     public static function findMenuItem($menutype_id){
-        $list = MenuItem::where('menutype_id', $menutype_id)->get();
+        $list = MenuItem::where('menutype_id', $menutype_id)
+            ->where('deleted', 'false')
+            ->get();
         
         if($list->count()){
             $return['error'] = false;
@@ -46,8 +50,9 @@ class MenuBusiness
 
     public static function findMenuExtra($menuitem_id){
         try{
-            $menuItem = MenuItem::find($menuitem_id);
-            $list = $menuItem->menuExtras;
+            $list = MenuExtra::where('menuitem_id', $menuitem_id)
+                ->where('deleted', 'false')
+                ->get();
 
             if($list->count()){
                 $return['error'] = false;

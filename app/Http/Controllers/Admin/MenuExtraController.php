@@ -151,13 +151,14 @@ class MenuExtraController extends Controller
     public function delete($id)
     {
         if(auth()->user()->can('menu_delete')){
-            $menuitem_id = MenuExtra::find($id)->menuItem->id;
-            MenuExtra::find($id)->delete();
+            $register = MenuExtra::find($id);
+            $register->deleted = true;
+            $register->update();
 
-            $message = 'Menu extra deleted successfully.';
+            $message = 'Menu item deleted successfully.';
             $typeMessage = 'green white-text';
 
-            return redirect()->route('admin.menutype.menuitem.menuextra', $menuitem_id)
+            return redirect()->route('admin.menutype.menuitem.menuextra', $register->menuItem->id)
                 ->with( ['message' => $message] )
                 ->with( ['typeMessage' => $typeMessage] );
         }else{

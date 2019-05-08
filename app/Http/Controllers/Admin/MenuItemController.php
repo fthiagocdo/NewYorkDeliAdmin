@@ -181,13 +181,14 @@ class MenuItemController extends Controller
     public function delete($id)
     {
         if(auth()->user()->can('menu_delete')){
-            $menutype_id = MenuItem::find($id)->type->id;
-            MenuItem::find($id)->delete();
+            $register = MenuItem::find($id);
+            $register->deleted = true;
+            $register->update();
 
             $message = 'Menu item deleted successfully.';
             $typeMessage = 'green white-text';
 
-            return redirect()->route('admin.menutype.menuitem', $menutype_id)
+            return redirect()->route('admin.menutype.menuitem', $register->type->id)
                 ->with( ['message' => $message] )
                 ->with( ['typeMessage' => $typeMessage] );
         }else{

@@ -116,7 +116,7 @@ class ApiController extends Controller
         $email = str_replace("%20", " ", $request['email']);
         $phone_number = str_replace("%20", " ", $request['phoneNumber']);
         $avatar = str_replace("%20", " ", $request['avatar']);
-        $password = str_replace("%20", " ", $request['password']);
+        //$password = str_replace("%20", " ", $request['password']);
         $postcode = str_replace("%20", " ", $request['postcode']);
         $address = str_replace("%20", " ", $request['address']);
         $shop_id = str_replace("%20", " ", $request['preferredShopId']);
@@ -130,9 +130,9 @@ class ApiController extends Controller
         /*} if( $avatar == null || $avatar == ''){
             $valid = false;
             $message = "Field 'avatar' must be filled.";*/
-        } else if(($password != null && $password != '') && strlen($password) < 8){
+        /*} else if(($password != null && $password != '') && strlen($password) < 8){
             $valid = false;
-            $message = 'Password must be at least 8 characters long.';
+            $message = 'Password must be at least 8 characters long.';*/
         } else if($phone_number == null || $phone_number == ''){
             $valid = false;
             $message = "Field 'phone number' must be filled.";
@@ -156,7 +156,7 @@ class ApiController extends Controller
             $user->email = $email;
             $user->phone_number = $phone_number;
             $user->avatar = $avatar;
-            $user->password = bcrypt($password);
+            //$user->password = bcrypt($password);
             $user->postcode = $postcode;
             $user->address = $address;
             $user->shop_id = $shop_id;
@@ -278,50 +278,7 @@ class ApiController extends Controller
 
     public function orderAgain($id, $user_id)
 	{
-		$lastCheckout = Checkout::where('user_id', '=', $user_id)
-			->where('confirmed', '=', false)
-			->first();
-
-		if(isset($lastCheckout)){
-			$lastCheckout->delete();
-        }
-
-		$checkout = Checkout::find($id);
-		
-		$newCheckout = new Checkout();
-		$newCheckout->user_id = $checkout->user_id;
-		$newCheckout->shop_id = $checkout->shop_id;
-		$newCheckout->partial_value = $checkout->partial_value;
-		$newCheckout->delivery_fee = $checkout->delivery_fee;
-		$newCheckout->rider_tip = $checkout->rider_tip;
-		$newCheckout->total_value = $checkout->total_value;
-		$newCheckout->delivery_postcode = $checkout->delivery_postcode;
-		$newCheckout->delivery_postcode = $checkout->delivery_postcode;
-		$newCheckout->delivery_address = $checkout->delivery_address;
-		$newCheckout->delivery_address = $checkout->delivery_address;
-		$newCheckout->delivery_phone = $checkout->delivery_phone;
-		$newCheckout->save();
-
-		foreach ($checkout->checkoutItems as $checkoutItem) {
-			$newCheckoutItem = new CheckoutItem();
-			$newCheckoutItem->checkout_id = $newCheckout->id;
-			$newCheckoutItem->unitary_price = $checkoutItem->unitary_price;
-			$newCheckoutItem->quantity = $checkoutItem->quantity;
-			$newCheckoutItem->total_price = $checkoutItem->total_price;
-			$newCheckoutItem->total_price = $checkoutItem->total_price;
-			$newCheckoutItem->menuitem_id = $checkoutItem->menuitem_id;
-			$newCheckoutItem->save();
-
-			foreach ($checkoutItem->checkoutItemExtras as $checkoutItemExtra) {
-				$newCheckoutItemExtra = new CheckoutItemExtra();
-				$newCheckoutItemExtra->checkoutitem_id = $newCheckoutItem->id;
-				$newCheckoutItemExtra->price = $checkoutItemExtra->price;
-				$newCheckoutItemExtra->menuextra_id = $checkoutItemExtra->menuextra_id;
-				$newCheckoutItemExtra->save();
-			}
-		}
-        
-		return $this->getShoppingCart($user_id, null);
+		return OrderBusiness::orderAgain($id, $user_id);
 	}
 
     public function getOrderItems($id)

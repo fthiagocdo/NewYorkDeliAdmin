@@ -24,7 +24,6 @@ class CheckoutBusiness
 	{
         try{
             $shops = Shop::all();
-            
             $checkout = CheckoutBusiness::findOrCreateCheckout($user_id, $shop_id);
             
             //order -> checkoutItem
@@ -74,7 +73,6 @@ class CheckoutBusiness
                 $checkout = new Checkout();
                 $checkout->user_id = $user->id;
                 $checkout->partial_value = 0.0;
-                $checkout->total_value = 2;
                 $checkout->deliver_or_collect = 'deliver_address';
                 $checkout->delivery_fee = 2;
                 $checkout->rider_tip = 0.0;
@@ -83,9 +81,20 @@ class CheckoutBusiness
                 $checkout->save();
             }
             
-            if($checkout->shop != null && !$checkout->shop->isOpen()){
+            if($checkout->shop() != null && !$checkout->shop()->isOpen()){
                 $checkout->shop_id = null;
+            }else{
+                //Verify if the shop has delivery. If not, set up checkout details
+                if(!$checkout->shop()->delivery){
+                    $checkout->delivery_fee = 0;
+                    if($checkout->deliver_or_collect == 'deliver_address'){
+                        $checkout->deliver_or_collect = "deliver_table";
+                        //$checkout->total_value = $checkout->total_value - 2;
+                    }
+                }
             }
+
+            $checkout->total_value = $checkout->partial_value + $checkout->delivery_fee + $checkout->rider_tip;
             
             return $checkout;
         }catch(Exception $e){
