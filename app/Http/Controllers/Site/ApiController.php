@@ -54,7 +54,7 @@ class ApiController extends Controller
         $provider = str_replace("%20", " ", $request['provider']);
 
         /* Get Token */
-        if(Auth::attempt(['email' => request('email'), 'password' => request('uid')])){ 
+        if(Auth::attempt(['email' => $email, 'password' => $uid])){ 
             $user = Auth::user(); 
             $token =  $user->createToken('MyApp')-> accessToken;  
             return response()->json([
