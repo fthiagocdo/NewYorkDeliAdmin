@@ -11,6 +11,8 @@ use App\Country;
 
 class Util
 {
+    const EMAIL_ADDRESS = "ftcdevsolutions@gmail.com";
+
 	public static function Mask($mask, $str){
 
 	    $str = str_replace(" ","",$str);
@@ -49,32 +51,32 @@ class Util
         return $date->format('d/m/Y h:i A');
     }
 
-    public static function sendMail($name, $sender, $receiver, $message, $attachedFile, $attachedFilename)
+    public static function sendEmailContactus($name, $reply, $message)
     {
         try{
-            $data['name'] = $name; 
+            $data['name'] = $name;
             $data['message'] = $message;
+            $data['reply'] = $reply; 
 
-            $msgError = Util::validateContact($name, $sender, $receiver, $message, $attachedFile, $attachedFilename);        
+            $msgError = Util::validateEmailContactus($name, $reply, $message);
             if(strlen($msgError) == 0) {
-                $receiver = 'fthiagocdo@gmail.com';
+                $sender = Util::EMAIL_ADDRESS;
+                $receiver = Util::EMAIL_ADDRESS;
+
                 Mail::send('emails.contact', 
                     [
                         'data'=>$data
                     ], 
-                    function($mail) use ($name, $sender, $receiver, $attachedFile, $attachedFilename){
-                        $mail->from($sender, $name);
-                        $mail->replyTo($sender, $name);
+                    function($mail) use ($name, $sender, $receiver, $reply){
+                        $mail->from($sender, 'New York Deli APP');
+                        $mail->replyTo($reply, $name);
                         $mail->to($receiver);
                         $mail->subject('Mail sent through app');
-                        if($attachedFile != null){
-                            $mail->attachData($attachedFile, $attachedFilename);
-                        }
                     }
                 );
-
+                
                 $return['error'] = false;
-                $return['message'] = 'Your message was sent.';
+                $return['message'] = 'Thank you for sending us a message. We will reply it soon.';
                 return $return;
             }else{
                 $return['error'] = true;
@@ -82,34 +84,59 @@ class Util
                 return $return;
             }
         }catch(Exception $e){
-            Log::error('Util.sendMail: '.$e->getMessage());
+            Log::error('Util.sendEmailContactus: '.$e->getMessage());
             $return['error'] = true;
             $return['message'] = 'It was no possible complete your request. Please try again later...';
             return $return;
         }
     }
 
-    private static function validateContact($name, $sender, $receiver, $message, $attachedFile, $attachedFilename)
+    private static function validateEmailContactus($name, $email, $message)
     {
         if(!isset($name)){
             return "Field 'name' must be informed.";
-        } else if(!isset($sender)){
-            return "Field 'sender email' must be informed.";
-        } else if(!isset($receiver)){
-            return "Field 'receiver email' must be informed.";
+        } else if(!isset($email)){
+            return "Field 'email' must be informed.";
+        }else if(isset($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return 'Sender E-mail is not valid.';
         } else if(!isset($message)){
             return "Field 'message' must be informed.";
-        } else if(!filter_var($sender, FILTER_VALIDATE_EMAIL)) {
-            return 'Sender E-mail is not valid.';
-        } else if(!filter_var($receiver, FILTER_VALIDATE_EMAIL)) {
-            return 'Receiver E-mail is not valid.';
-        } else if(isset($attachedFile)){
-            if(!isset($attachedFilename)){
-                return "Field 'file name' must be informed.";
-            }
-        }
+        } 
 
         return '';
+    }
+
+    public static function sendMailInvoice($name, $receiver, $attachedFile, $attachedFilename)
+    {
+        try{
+            $sender = Util::EMAIL_ADDRESS;
+
+            $data['name'] = $name;
+            $data['message'] = 'Please, find your invoice attached to this email.';
+            $data['reply'] = Util::EMAIL_ADDRESS; 
+            
+            Mail::send('emails.contact', 
+                [
+                    'data'=>$data
+                ], 
+                function($mail) use ($sender, $receiver, $attachedFile, $attachedFilename){
+                    $mail->from($sender, 'New York Deli APP');
+                    $mail->to($receiver);
+                    $mail->subject('Here is your invoice');
+                    if($attachedFile != null){
+                        $mail->attachData($attachedFile, $attachedFilename);
+                    }
+                }
+            );
+            $return['error'] = false;
+            $return['message'] = 'Your message was sent.';
+            return $return;
+        }catch(Exception $e){
+            Log::error('Util.sendMailInvoice: '.$e->getMessage());
+            $return['error'] = true;
+            $return['message'] = $e->getMessage();
+            return $return;
+        }
     }
 
     public static function listShops($justOpenedShops)

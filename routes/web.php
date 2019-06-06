@@ -7,10 +7,6 @@ Route::post('/contactus/send', ['as'=>'site.contactus.send', 'uses'=>'Site\HomeC
 
 Route::get('/login', ['as'=>'site.login', 'uses'=>'Site\LoginController@index']);
 Route::post('/login', ['as'=>'site.login', 'uses'=>'Site\LoginController@login']);
-/*Removed at 20/02/19
-Route::get('/login/auth/{provider}', ['as'=>'site.login.social', 'uses'=>'Site\LoginController@redirectToProvider']);
-Route::get('/login/auth/{provider}/return', ['as'=>'site.login.social.retorno', 'uses'=>'Site\LoginController@handleProviderCallback']);
-*/
 Route::get('/login/forgotpassword', ['as'=>'site.login.forgot', 'uses'=>'Site\LoginController@forgotPassword']);
 Route::post('/login/forgotpassword', ['as'=>'site.login.forgot', 'uses'=>'Site\LoginController@resetPassword']);
 Route::get('/login/changepassword/{token}', ['as'=>'site.login.change', 'uses'=>'Site\LoginController@changePassword']);
@@ -18,19 +14,6 @@ Route::post('/login/changepassword/{user_id}', ['as'=>'site.login.save', 'uses'=
 /*Removed at 20/02/19
 Route::get('/login/signup', ['as'=>'site.login.signup', 'uses'=>'Site\LoginController@signup']);
 Route::post('/login/create', ['as'=>'site.login.create', 'uses'=>'Site\LoginController@createUser']);
-*/
-
-/*Removed at 11/02/19
-Route::get('/site/checkout/shoppingcart', ['as'=>'site.checkout.shoppingcart', 'uses'=>'Site\CheckoutController@shoppingCart']);
-Route::post('/site/checkout/additem', ['as'=>'site.checkout.additem', 'uses'=>'Site\CheckoutController@addItem']);
-Route::get('/site/checkout/removeitem/{id}', ['as'=>'site.checkout.removeitem', 'uses'=>'Site\CheckoutController@removeItem']);
-Route::get('/site/checkout/plusitem/{id}', ['as'=>'site.checkout.plusitem', 'uses'=>'Site\CheckoutController@plusItem']);
-Route::get('/site/checkout/minusitem/{id}', ['as'=>'site.checkout.minusitem', 'uses'=>'Site\CheckoutController@minusItem']);
-Route::get('/site/checkout/plustip', ['as'=>'site.checkout.plustip', 'uses'=>'Site\CheckoutController@plusTip']);
-Route::get('/site/checkout/minustip', ['as'=>'site.checkout.minustip', 'uses'=>'Site\CheckoutController@minusTip']);
-Route::post('/site/checkout/confirm', ['as'=>'site.checkout.confirm', 'uses'=>'Site\CheckoutController@confirm']);
-Route::get('/site/checkout/address/{preferredShop}', ['as'=>'site.checkout.address', 'uses'=>'Site\CheckoutController@address']);
-Route::put('/site/checkout/confirmAddress', ['as'=>'site.checkout.confirmAddress', 'uses'=>'Site\CheckoutController@confirmAddress']);
 */
 
 Route::group(['middleware'=>'auth'], function(){
@@ -100,10 +83,4 @@ Route::group(['middleware'=>'auth'], function(){
 	Route::get('/admin/order/orders/{shop_id}', ['as'=>'admin.order.orders', 'uses'=>'Admin\OrderController@index']);
 	Route::get('/admin/order/print/{id}', ['as'=>'admin.order.print', 'uses'=>'Admin\OrderController@print']);
 	Route::get('/admin/order/shop', ['as'=>'admin.order.shop', 'uses'=>'Admin\OrderController@shop']);
-
-	/*Removed at 11/02/19
-	Route::get('/admin/orderhistory', ['as'=>'admin.orderhistory', 'uses'=>'Admin\OrderHistoryController@index']);
-	Route::get('/admin/orderhistory/details/{id}', ['as'=>'admin.orderhistory.details', 'uses'=>'Admin\OrderHistoryController@details']);
-	Route::get('/admin/orderhistory/orderagain/{id}', ['as'=>'admin.orderhistory.orderagain', 'uses'=>'Admin\OrderHistoryController@orderagain']);
-	*/
 });

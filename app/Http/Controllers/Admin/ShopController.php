@@ -160,6 +160,7 @@ class ShopController extends Controller
             $register->vendor_name = $data['vendor_name'];
             $register->integration_key = $data['integration_key'];
             $register->integration_password = $data['integration_password'];
+            $register->url = $data['url'];
             $register->update();
 
             $message = 'Payment setup updated successfully.';

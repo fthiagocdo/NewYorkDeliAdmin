@@ -12,7 +12,7 @@ use App\Util\Util;
 use App\Checkout;
 use App\Shop;
 use App\ShopSchedule;
-use App\User;
+use App\Customer;
 use App\MenuItem;
 use App\CheckoutItem;
 use App\CheckoutItemExtra;
@@ -20,11 +20,11 @@ use App\PaymentConfirmation;
 
 class CheckoutBusiness
 {
-    public static function shoppingCart($user_id, $shop_id)
+    public static function shoppingCart($customer_id, $shop_id)
 	{
         try{
             $shops = Shop::all();
-            $checkout = CheckoutBusiness::findOrCreateCheckout($user_id, $shop_id);
+            $checkout = CheckoutBusiness::findOrCreateCheckout($customer_id, $shop_id);
             
             //order -> checkoutItem
             $listcheckoutItem = collect();
@@ -55,23 +55,22 @@ class CheckoutBusiness
         }catch(Exception $e){
             Log::error('CheckoutBusiness.shoppingCart: '.$e->getMessage());
             $return['error'] = true;
-            $return['message'] = 'It was no possible complete your request. Please try again later...';
+            $return['message'] = $e->getMessage();
             return $return;
         }
     }
     
-    private static function findOrCreateCheckout($user_id, $shop_id)
+    public static function findOrCreateCheckout($customer_id, $shop_id)
 	{
         try{
-            $user = User::find($user_id);
-            
-            $checkout = Checkout::where('user_id', '=', $user->id)
+            $checkout = Checkout::where('customer_id', '=', $customer_id)
+                ->where('shop_id', '=', $shop_id)
                 ->where('confirmed', '=', false)
                 ->first();
-            
+                
             if(!isset($checkout)){
                 $checkout = new Checkout();
-                $checkout->user_id = $user->id;
+                $checkout->customer_id = $customer_id;
                 $checkout->partial_value = 0.0;
                 $checkout->deliver_or_collect = 'deliver_address';
                 $checkout->delivery_fee = 2;
@@ -81,16 +80,11 @@ class CheckoutBusiness
                 $checkout->save();
             }
             
-            if($checkout->shop() != null && !$checkout->shop()->isOpen()){
-                $checkout->shop_id = null;
-            }else{
-                //Verify if the shop has delivery. If not, set up checkout details
-                if(!$checkout->shop()->delivery){
-                    $checkout->delivery_fee = 0;
-                    if($checkout->deliver_or_collect == 'deliver_address'){
-                        $checkout->deliver_or_collect = "deliver_table";
-                        //$checkout->total_value = $checkout->total_value - 2;
-                    }
+            //Verify if the shop has delivery. If not, set up checkout details
+            if(!$checkout->shop()->delivery){
+                $checkout->delivery_fee = 0;
+                if($checkout->deliver_or_collect == 'deliver_address'){
+                    $checkout->deliver_or_collect = "deliver_table";
                 }
             }
 
@@ -104,10 +98,32 @@ class CheckoutBusiness
             return $return;
         }
     }
+
+    public static function deleteShoppingCart($customer_id)
+	{
+        try{
+            $lastCheckout = Checkout::where('customer_id', '=', $customer_id)
+                ->where('confirmed', '=', false)
+                ->first();
+
+            if(isset($lastCheckout)){
+                $lastCheckout->delete();
+            }
+            
+            $return['error'] = false;
+            $return['message'] = 'OK';
+            return $return;
+        }catch(Exception $e){
+            Log::error('CheckoutBusiness.deleteShoppingCart: '.$e->getMessage());
+            $return['error'] = true;
+            $return['message'] = $e->getMessage();
+            return $return;
+        }
+    }
     
-    public static function addItem($data, $user_id, $shop_id)
+    public static function addItem($data, $customer_id, $shop_id)
     {   	
-        $return = CheckoutBusiness::shoppingCart($user_id, $shop_id);
+        $return = CheckoutBusiness::shoppingCart($customer_id, $shop_id);
         if($return['error']){
             return $return;
         }else{
@@ -154,15 +170,15 @@ class CheckoutBusiness
             }catch(Exception $e){
                 Log::error('CheckoutBusiness.addItem: '.$e->getMessage());
                 $return['error'] = true;
-                $return['message'] = 'It was no possible complete your request. Please try again later...';
+                $return['message'] = $e->getMessage();
                 return $return;
             }
         }
     }
 
-    public static function removeItem($id, $user_id)
+    public static function removeItem($id, $shop_id, $customer_id)
 	{
-        $return = CheckoutBusiness::shoppingCart($user_id, null);
+        $return = CheckoutBusiness::shoppingCart($customer_id, $shop_id);
         if($return['error']){
             return $return;
         }else{
@@ -188,9 +204,9 @@ class CheckoutBusiness
         }
     }
     
-    public static function plusItem($id, $user_id)
+    public static function plusItem($id, $shop_id, $customer_id)
 	{
-        $return = CheckoutBusiness::shoppingCart($user_id, null);
+        $return = CheckoutBusiness::shoppingCart($customer_id, $shop_id);
         if($return['error']){
             return $return;
         }else{
@@ -218,9 +234,9 @@ class CheckoutBusiness
         }
     }
 
-    public static function minusItem($id, $user_id)
+    public static function minusItem($id, $shop_id, $customer_id)
 	{
-        $return = CheckoutBusiness::shoppingCart($user_id, null);
+        $return = CheckoutBusiness::shoppingCart($customer_id, $shop_id);
         if($return['error']){
             return $return;
         }else{
@@ -241,7 +257,7 @@ class CheckoutBusiness
                     $return['checkout'] = $checkout;
                     return $return;
                 }else{
-                    return CheckoutBusiness::removeItem($id, $user_id);
+                    return CheckoutBusiness::removeItem($id, $customer_id);
                 }
             }catch(Exception $e){
                 Log::error('CheckoutBusiness.minusItem: '.$e->getMessage());
@@ -252,9 +268,9 @@ class CheckoutBusiness
         }
     }  
     
-    public static function plusTip($user_id)
+    public static function plusTip($customer_id, $shop_id)
 	{
-        $return = CheckoutBusiness::shoppingCart($user_id, null);
+        $return = CheckoutBusiness::shoppingCart($customer_id, $shop_id);
         if($return['error']){
             return $return;
         }else{
@@ -277,9 +293,9 @@ class CheckoutBusiness
         }
     }
     
-    public static function minusTip($user_id)
+    public static function minusTip($customer_id, $shop_id)
 	{
-		$return = CheckoutBusiness::shoppingCart($user_id, null);
+		$return = CheckoutBusiness::shoppingCart($customer_id, $shop_id);
         if($return['error']){
             return $return;
         }else{
@@ -304,9 +320,9 @@ class CheckoutBusiness
         }
     }	
 
-    public static function deliverOrCollect($user_id, $deliverOrCollect)
+    public static function deliverOrCollect($customer_id, $shop_id, $deliverOrCollect)
 	{
-        $return = CheckoutBusiness::shoppingCart($user_id, null);
+        $return = CheckoutBusiness::shoppingCart($customer_id, $shop_id);
         if($return['error']){
             return $return;
         }else{
@@ -338,9 +354,9 @@ class CheckoutBusiness
         }
     }
 
-    public static function checkoutMessage($user_id, $checkout_message)
+    public static function checkoutMessage($customer_id, $shop_id, $checkout_message)
 	{
-        $return = CheckoutBusiness::shoppingCart($user_id, null);
+        $return = CheckoutBusiness::shoppingCart($customer_id, $shop_id);
         if($return['error']){
             return $return;
         }else{
@@ -362,10 +378,10 @@ class CheckoutBusiness
         }
     }
     
-    public static function confirmCheckout($user_id, $shop_id, $time, $phone, $postcode, $address, $table_number)
+    public static function confirmCheckout($customer_id, $shop_id, $time, $name, $phone, $postcode, $address, $table_number)
     {
         try{
-            $return = CheckoutBusiness::shoppingCart($user_id, null);
+            $return = CheckoutBusiness::shoppingCart($customer_id, $shop_id);
             if($return['error']){
                 return $return;
             }else{
@@ -392,22 +408,31 @@ class CheckoutBusiness
                             //Deliver the order at the address
                             if($checkout->deliver_or_collect == 'deliver_address'){
                                 if($shop->isOpen()){
-                                    $return = CheckoutBusiness::validateDistance($shop_id, $phone, $postcode, $address);
+                                    /*$return = CheckoutBusiness::validateDistance($shop_id, $phone, $postcode, $address);
                                     //Distance Error
                                     if($return['error']){
                                         return $return;
-                                    }else{
-                                        //Deliver success.
-                                        $checkout->delivery_phone = $phone;
-                                        $checkout->delivery_postcode = $postcode;
-                                        $checkout->delivery_address = $address;
-                                        $checkout->time_delivery_collect = $time;
-                                        $checkout->update();
+                                    }else{*/
+                                        $msgError = CheckoutBusiness::validateAddress($name, $phone, $postcode, $address);
+                                        if(strlen($msgError) != 0) {
+                                            //Required field error
+                                            $return['error'] = true;
+                                            $return['message'] = $msgError;
+                                            return $return;
+                                        }else{
+                                            //Deliver success.
+                                            $checkout->delivery_name = $name;
+                                            $checkout->delivery_phone = $phone;
+                                            $checkout->delivery_postcode = $postcode;
+                                            $checkout->delivery_address = $address;
+                                            $checkout->time_delivery_collect = $time;
+                                            $checkout->update();
 
-                                        $return['error'] = false;
-                                        $return['message'] = 'OK';
-                                        return $return;
-                                    }                              
+                                            $return['error'] = false;
+                                            $return['message'] = 'OK';
+                                            return $return;
+                                        }
+                                   // }                              
                                 }else{
                                     //Deliver Time Error
                                     $return['error'] = true;
@@ -417,7 +442,7 @@ class CheckoutBusiness
                             //Deliver the order at the table
                             }else if($checkout->deliver_or_collect == 'deliver_table'){
                                 if($shop->isOpen()){
-                                    $msgError = CheckoutBusiness::validateTable($phone, $table_number);
+                                    $msgError = CheckoutBusiness::validateTable($name, $phone, $table_number);
                                     if(strlen($msgError) != 0) {
                                         //Required field error
                                         $return['error'] = true;
@@ -425,9 +450,9 @@ class CheckoutBusiness
                                         return $return;
                                     }else{
                                         //Deliver Table Success
+                                        $checkout->delivery_name = $name;
                                         $checkout->delivery_phone = $phone;
-                                        $checkout->delivery_postcode = $postcode;
-                                        $checkout->delivery_address = $address;
+                                        $checkout->table_number = $table_number;
                                         $checkout->time_delivery_collect = $time;
                                         $checkout->update();
 
@@ -444,7 +469,7 @@ class CheckoutBusiness
                             //Collect the order
                             }else{
                                 if($shop->isOpen()){
-                                    $msgError = CheckoutBusiness::validateCollect($phone);
+                                    $msgError = CheckoutBusiness::validateCollect($name, $phone);
                                     if(strlen($msgError) != 0) {
                                         //Required field error
                                         $return['error'] = true;
@@ -452,6 +477,7 @@ class CheckoutBusiness
                                         return $return;
                                     }else{
                                         //Collect Success
+                                        $checkout->delivery_name = $name;
                                         $checkout->delivery_phone = $phone;
                                         $checkout->delivery_postcode = $postcode;
                                         $checkout->delivery_address = $address;
@@ -482,9 +508,9 @@ class CheckoutBusiness
         }
     }
 
-    public static function paymentConfirmation($user_id, $transactionId, $retrievalReference)
+    public static function paymentConfirmation($customer_id, $shop_id, $email, $transactionId, $retrievalReference)
 	{
-        $return = CheckoutBusiness::shoppingCart($user_id, null);
+        $return = CheckoutBusiness::shoppingCart($customer_id, $shop_id);
         if($return['error']){
             return $return;
         }else{
@@ -499,11 +525,11 @@ class CheckoutBusiness
                     $paymentConfirmation->checkout_id = $checkout->id;
                     $paymentConfirmation->transaction_id = $transactionId;
                     $paymentConfirmation->retrieval_reference = $retrievalReference;
-                    $paymentConfirmation->order_number = $checkout->user_id.$checkout->id;
+                    $paymentConfirmation->order_number = $checkout->customer_id.$checkout->id;
                     $paymentConfirmation->save();
 
-                    $return = CheckoutBusiness::sendInvoice($checkout);
-                    
+                    CheckoutBusiness::sendInvoice($checkout, $email);
+
                     if($checkout->deliver_or_collect == 'deliver_address'){
                         $return['error'] = false;
                         $return['message'] = 'Please, make a note of your order number: '.$paymentConfirmation->order_number.'. Your order will be delivered at '.$checkout->time_delivery_collect.' at your address.';
@@ -525,32 +551,28 @@ class CheckoutBusiness
             }catch(Exception $e){
                 Log::error('CheckoutBusiness.paymentConfirmation: '.$e->getMessage());
                 $return['error'] = true;
-                $return['message'] = 'It was no possible complete your request. Please try again later...';
+                $return['message'] = $e->getMessage();
                 return $return;
             }
         }
     }
 
-    private static function sendInvoice($checkout)
+    private static function sendInvoice($checkout, $email)
     {
         try{
-            $user = $checkout->user()->first();
+            $customer = $checkout->customer()->first();
             $payment = $checkout->payment()->first();
-            $pdf_path = 'public/receipts/'.$user->id.'/'.$payment->order_number.'.pdf';
+            $pdf_path = 'public/receipts/'.$customer->id.'/'.$payment->order_number.'.pdf';
 
             if(isset($checkout->checkout_message)){
                 $checkout->checkout_message = Util::splitText($checkout->checkout_message, 40, "\n");
             }
             
-            Util::sendMail($user->name, 'fthiagocdo@gmail.com', $user->email, 'Receipt', PDF::loadView('pdf.invoice', compact('checkout'))->output(), 'invoice.pdf');
-                    
-            $return['error'] = false;
-            $return['message'] = '';
-            return $return;
+            return Util::sendMailInvoice($customer->name, $email, PDF::loadView('pdf.invoice', compact('checkout'))->output(), 'invoice.pdf');
         }catch(Exception $e){
-            Log::error('CheckoutBusiness.saveReceit: '.$e->getMessage());
+            Log::error('CheckoutBusiness.sendInvoice: '.$e->getMessage());
             $return['error'] = true;
-            $return['message'] = 'It was no possible complete your request. Please try again later...';
+            $return['message'] = $e->getMessage();
             return $return;
         }
     }
@@ -702,9 +724,11 @@ class CheckoutBusiness
         }
     }
 
-    private static function validateAddress($phone, $postcode, $address)
+    private static function validateAddress($name, $phone, $postcode, $address)
     {
-        if(!isset($phone)){
+        if(!isset($name)){
+            return "Field 'name' must be filled.";
+        } else if(!isset($phone)){
             return "Field 'phone' must be filled.";
         } else if(!isset($postcode)){
             return "Field 'postcode' must be filled.";
@@ -715,9 +739,11 @@ class CheckoutBusiness
         return '';
     }
 
-    private static function validateTable($phone, $table_number)
+    private static function validateTable($name, $phone, $table_number)
     {
-        if(!isset($table_number)){
+        if(!isset($name)){
+            return "Field 'name' must be filled.";
+        } else if(!isset($table_number)){
             return "Field 'table number' must be filled.";
         } else if(!isset($phone)){
             return "Field 'phone' must be filled.";
@@ -726,9 +752,11 @@ class CheckoutBusiness
         return '';
     }
 
-    private static function validateCollect($phone)
+    private static function validateCollect($name, $phone)
     {
-        if(!isset($phone)){
+        if(!isset($name)){
+            return "Field 'name' must be filled.";
+        } else if(!isset($phone)){
             return "Field 'phone' must be filled.";
         }
 

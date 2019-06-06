@@ -74,7 +74,7 @@ function removeMasks(){
 }
 
 //Firebase Email Signin
-async function signin() {
+/*async function signin() {
   let email = $('#email').val();
   let password = $('#password').val();
   if(email == '' || password == ''){
@@ -93,4 +93,4 @@ async function signin() {
     $('#provider').val('email');
     $("#form_login").submit();
   }
-}
+}*/

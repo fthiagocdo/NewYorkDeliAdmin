@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use App\Checkout;
 use App\ShopSchedule;
-use App\User;
 use App\MenuType;
 
 class Shop extends Model
@@ -18,11 +17,6 @@ class Shop extends Model
     public function shopSchedules()
     {
         return $this->hasMany(ShopSchedule::class, 'shop_id', 'id');
-    }
-
-    public function users()
-    {
-        return $this->hasMany(User::class, 'shop_id', 'id');
     }
 
     public function menuTypes()

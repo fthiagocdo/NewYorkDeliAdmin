@@ -7,7 +7,7 @@
 </head>
 <body style="width: 300px;">
 	<p style="margin: 5px;"><strong>Order Number:</strong> {{ ucwords($checkout->payment->order_number) }}</p>
-	<p style="margin: 5px;"><strong>Customer:</strong> {{ ucwords($checkout->user->name) }}</p>
+	<p style="margin: 5px;"><strong>Customer:</strong> {{ ucwords($checkout->customer->name) }}</p>
 	<p style="margin: 5px;"><strong>Phone Number:</strong> {{ $checkout->delivery_phone }}</p>
 	@if($checkout->deliver_or_collect == 'deliver_address')
 	<p style="margin: 5px;"><strong>Address:</strong> {{ ucwords($checkout->delivery_address).', '.strtoupper($checkout->delivery_postcode) }}</p>

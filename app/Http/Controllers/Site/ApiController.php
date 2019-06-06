@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth; 
+use App\Business\CustomerBusiness;
 use App\Business\MenuBusiness;
 use App\Business\CheckoutBusiness;
 use App\Business\OrderBusiness;
@@ -20,7 +21,7 @@ use App\Http\Controllers\Admin\OrderHistoryController;
 use App\Http\Controllers\Site\CheckoutController;
 use App\Http\Controllers\Admin\ShopController;
 use App\Util\Util;
-use App\User;
+use App\Customer;
 use App\Shop;
 use App\Checkout;
 use App\CheckoutItem;
@@ -28,212 +29,27 @@ use App\CheckoutItemExtra;
 
 class ApiController extends Controller
 {
-    /*public function login(){
-        if(Auth::attempt(['email' => request('email'), 'password' => request('uid')])){ 
-            $user = Auth::user(); 
-            $success['token'] =  $user->createToken('MyApp')-> accessToken; 
-            return response()->json(['success' => $success], 200); 
-        }else{ 
-            return response()->json(['error'=>'Unauthorised'], 401); 
-        } 
-    }
+    const EMAIL_ADDRESS = "ftcdevsolutions@gmail.com";
 
-    public function findUser(){ 
-        $user = Auth::user(); 
-        return response()->json(['success' => $user], 200); 
-    } */
-
-    public function findOrCreateUser(Request $request)
+    public function findOrCreateCustomer(Request $request)
     {
-        $name = str_replace("%20", " ", $request['name']);
-        $email = str_replace("%20", " ", $request['email']);
-        $phone_number = str_replace("%20", " ", $request['phoneNumber']);
-        $avatar = str_replace("%20", " ", $request['avatar']);
-        $uid = str_replace("%20", " ", $request['uid']);
-        $password = str_replace("%20", " ", $request['password']);
-        $provider = str_replace("%20", " ", $request['provider']);
+        $customer = Customer::where('provider_id', '=', $request['provider_id'])->first();
 
-        /* Get Token */
-        if(Auth::attempt(['email' => $email, 'password' => $uid])){ 
-            $user = Auth::user(); 
-            $token =  $user->createToken('MyApp')-> accessToken;  
+        if(isset($customer)){
+            return CustomerBusiness::findCustomer($request);
             return response()->json([
-                'user' => $user,
-                'token' => $token,
+                'customer' => $customer,
+                'message' => 'Customer found.',
                 'error' => false
             ], 200);
         }else{
-            $valid = true;
-            $message = '';
-            if($email == null || $email == ''){
-                $valid = false;
-                $message = "Field 'e-mail' must be filled.";
-            }else if(!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $valid = false;
-                $message = "E-mail not valid.";
-            }else if(($password != null && $password != '') && strlen($password) < 8){
-                $valid = false;
-                $message = 'Password must be at least 8 characters long.';
-            }else if($provider == null || $provider == ''){
-                $valid = false;
-                $message = "Field 'provider' must be filled.";
-            }
-
-            if($valid){
-                $user = new User();
-                $user->name = $name == null || $name == '' ? substr($user->name, 0, strpos($user->name, '@')) : $name;
-                $user->email = $email;
-                $user->phone_number = $phone_number;
-                if($avatar == null || $avatar == ''){
-                    $user->avatar = url('img/user-avatar.png');
-                }else{
-                    $user->avatar = $avatar;
-                }
-                /*Password == Firebase UID*/
-                $user->password = bcrypt($uid);
-                $user->shop_id = Shop::all()->first()->id;
-                $user->provider = $provider;
-                $user->save();
-
-                $user->addRole('customer');
-
-                return response()->json([
-                    'user' => $user,
-                    'error' => false
-                ], 200);
-            }else{
-                return response()->json([
-                    'error' => true,
-                    'message' => $message
-                ], 200);
-            }
+            return CustomerBusiness::createCustomer($request);
         }
     }
 
-    public function updateUser(Request $request, $id)
+    public function updateCostumer(Request $request, $id)
     {
-        $name = str_replace("%20", " ", $request['name']);
-        $email = str_replace("%20", " ", $request['email']);
-        $phone_number = str_replace("%20", " ", $request['phoneNumber']);
-        $avatar = str_replace("%20", " ", $request['avatar']);
-        //$password = str_replace("%20", " ", $request['password']);
-        $postcode = str_replace("%20", " ", $request['postcode']);
-        $address = str_replace("%20", " ", $request['address']);
-        $shop_id = str_replace("%20", " ", $request['preferredShopId']);
-        $receive_notifications = str_replace("%20", " ", $request['receiveNotifications']);
-        
-        $valid = true;
-        $message = '';
-        if( $name == null || $name == ''){
-            $valid = false;
-            $message = "Field 'name' must be filled.";
-        /*} if( $avatar == null || $avatar == ''){
-            $valid = false;
-            $message = "Field 'avatar' must be filled.";*/
-        /*} else if(($password != null && $password != '') && strlen($password) < 8){
-            $valid = false;
-            $message = 'Password must be at least 8 characters long.';*/
-        } else if($phone_number == null || $phone_number == ''){
-            $valid = false;
-            $message = "Field 'phone number' must be filled.";
-        } else if($postcode == null || $postcode == ''){
-            $valid = false;
-            $message = "Field 'postcode' must be filled.";
-        } else if($address == null || $address == ''){
-            $valid = false;
-            $message = "Field 'address' must be filled.";
-        } else if($shop_id == null || $shop_id == ''){
-            $valid = false;
-            $message = "Field 'preferred shop' must be filled.";
-        } else if($receive_notifications == null || $receive_notifications == ''){
-            $valid = false;
-            $message = "Field 'receive notifications' must be filled.";
-        } 
-
-        if($valid){
-            $user = User::find($id);
-            $user->name = $name;
-            $user->email = $email;
-            $user->phone_number = $phone_number;
-            $user->avatar = $avatar;
-            //$user->password = bcrypt($password);
-            $user->postcode = $postcode;
-            $user->address = $address;
-            $user->shop_id = $shop_id;
-            $user->receive_notifications = $receive_notifications;
-            $user->update();
-
-            return response()->json([
-                'user' => $user, 
-                'error' => false,
-                'message' => 'User updated successfully.'
-            ], 200);
-        }else{
-            return response()->json([
-                'error' => true,
-                'message' => $message
-            ], 200);
-        }
-    }
-
-    public function getUser($email)
-    {   
-        $user = User::where('email', '=', $email)->first();
-
-        if(isset($user)){
-            return response()->json([
-                'error' => false,
-                'user' => $user
-            ], 200);
-        }else{
-            return response()->json([
-                'error' => true,
-                'message' => 'There is no user related to this e-mail.'
-            ], 200);
-        }
-    }
-
-    public function deleteUser($id)
-    {   
-        $user = User::find($id);
-        if(isset($user)){
-            $user->delete();
-        }
-        return response()->json([
-            'error' => false,
-            'message' => 'User deleted.'
-        ], 200);
-    }
-
-    public function uploadImageUser(Request $request, $id)
-    {
-        $photoName = 'avatar.jpeg';
-        $user = User::find($id);
-        
-        $path = $request->photo->storeAs('/public/avatars/'.$id, $photoName);
-
-        $user->avatar = $photoName;
-        $user->update();
-        
-        return response()->json($photoName, 200);
-    }
-
-    public function getImageUser($id)
-    {
-        $user = User::find($id);
-        $path = storage_path('app/public/avatars/'.$id.'/'.$user->avatar);
-        
-        if (!File::exists($path)) {
-            abort(404);
-        }
-
-        $file = File::get($path);
-        $type = File::mimeType($path);
-
-        $response = Response::make($file, 200);
-        $response->header("Content-Type", $type);
-
-        return $response;
+        return CustomerBusiness::updateCustomer($request, $id);
     }
 
     public function listMenuExtra($menuitem_id)
@@ -266,9 +82,9 @@ class ApiController extends Controller
         return (new MenuTypeController())->find($id, 'api');
     }
 
-    public function listOrderHistory($user_id, $shop_id)
+    public function listOrderHistory($customer_id, $shop_id)
     {
-        return OrderBusiness::listOrderHistory($user_id, $shop_id);
+        return OrderBusiness::listOrderHistory($customer_id, $shop_id);
     }
 
     public function findOrderHistory($id)
@@ -276,9 +92,9 @@ class ApiController extends Controller
         return OrderBusiness::getOrderDetails($id);
     }
 
-    public function orderAgain($id, $user_id)
+    public function orderAgain($id, $customer_id, $shop_id)
 	{
-		return OrderBusiness::orderAgain($id, $user_id);
+		return OrderBusiness::orderAgain($id, $customer_id, $shop_id);
 	}
 
     public function getOrderItems($id)
@@ -286,57 +102,62 @@ class ApiController extends Controller
         return (new OrderHistoryController())->getOrderItems($id, 'api');
     }
 
-    public function getShoppingCart($user_id, $shop_id)
+    public function getShoppingCart($customer_id, $shop_id)
     {
-        return CheckoutBusiness::shoppingCart($user_id, $shop_id);
+        return CheckoutBusiness::shoppingCart($customer_id, $shop_id);
     }
 
-    public function addItemToShoppingCart(Request $request, $user_id, $shop_id)
+    public function deleteShoppingCart($customer_id)
+    {
+        return CheckoutBusiness::deleteShoppingCart($customer_id);
+    }
+
+    public function addItemToShoppingCart(Request $request, $customer_id, $shop_id)
     {
         $data = $request->all();
         $menuExtras = explode(',', $data['menuExtras']);
         foreach($menuExtras as $menuextra_id){
             $data['menuextra_'.$menuextra_id] = $menuextra_id;
         }
-        return CheckoutBusiness::addItem($data, $user_id, $shop_id);
+        return CheckoutBusiness::addItem($data, $customer_id, $shop_id);
     }
 
-    public function removeItemFromShoppingCart($user_id, $checkoutitem_id)
+    public function removeItemFromShoppingCart($customer_id, $shop_id, $checkoutitem_id)
     {
-        return CheckoutBusiness::removeItem($checkoutitem_id, $user_id);
+        return CheckoutBusiness::removeItem($checkoutitem_id, $shop_id, $customer_id);
     }
 
-    public function plusItemToShoppingCart($user_id, $checkoutitem_id)
+    public function plusItemToShoppingCart($customer_id, $shop_id, $checkoutitem_id)
     {
-        return CheckoutBusiness::plusItem($checkoutitem_id, $user_id);
+        return CheckoutBusiness::plusItem($checkoutitem_id, $shop_id, $customer_id);
     }
 
-    public function minusItemFromShoppingCart($user_id, $checkoutitem_id)
+    public function minusItemFromShoppingCart($customer_id, $shop_id, $checkoutitem_id)
     {
-        return CheckoutBusiness::minusItem($checkoutitem_id, $user_id);
+        return CheckoutBusiness::minusItem($checkoutitem_id, $shop_id, $customer_id);
     }
 
-    public function plusRiderTip($user_id)
+    public function plusRiderTip($customer_id, $shop_id)
     {
-        return CheckoutBusiness::plusTip($user_id);
+        return CheckoutBusiness::plusTip($customer_id, $shop_id);
     }
 
-    public function minusRiderTip($user_id)
+    public function minusRiderTip($customer_id, $shop_id)
     {
-        return CheckoutBusiness::minusTip($user_id);
+        return CheckoutBusiness::minusTip($customer_id, $shop_id);
     }
 
-    public function deliverOrCollect(Request $request, $user_id)
+    public function deliverOrCollect(Request $request, $customer_id, $shop_id)
     {
         if($request['deliverOrCollect'] == 'null'  || $request['deliverOrCollect'] == ''){
             $deliverOrCollect = 'deliver_address';
         }else{
             $deliverOrCollect = $request['deliverOrCollect'];
         }
-        return CheckoutBusiness::deliverOrCollect($user_id, $deliverOrCollect);
+        return CheckoutBusiness::deliverOrCollect($customer_id, $shop_id, $deliverOrCollect);
     }
 
-    public function checkoutMessage(Request $request, $user_id)
+    public function checkoutMessage(Request $request, $customer_id, $shop_id)
     {
         if($request['checkoutMessage'] == 'null' || $request['checkoutMessage'] == ''){
             $checkout_message = null;
@@ -344,11 +165,16 @@ class ApiController extends Controller
             $checkout_message = str_replace("%20", " ", $request['checkoutMessage']);
         }
         
-        return CheckoutBusiness::checkoutMessage($user_id, $checkout_message);
+        return CheckoutBusiness::checkoutMessage($customer_id, $shop_id, $checkout_message);
     }
 
-    public function confirmCheckout(Request $request, $user_id, $shop_id)
+    public function confirmCheckout(Request $request, $customer_id, $shop_id)
     {
+        if($request['name'] == 'null' || $request['name'] == ''){
+            $name = null;
+        }else{
+            $name = str_replace("%20", " ", $request['name']);
+        }
         if($request['phone'] == 'null' || $request['phone'] == ''){
             $phone = null;
         }else{
@@ -375,7 +201,7 @@ class ApiController extends Controller
             $time = str_replace("%20", " ", $request['time']);
         }
         
-        return CheckoutBusiness::confirmCheckout($user_id, $shop_id, $time, $phone, $postcode, $address, $tableNumber);
+        return CheckoutBusiness::confirmCheckout($customer_id, $shop_id, $time, $name, $phone, $postcode, $address, $tableNumber);
     }
 
     public function getLimitTimeOrder($shop_id)
@@ -388,30 +214,25 @@ class ApiController extends Controller
         return Util::listShops($openedShops);
     }
 
-    public function sendMail(Request $request)
+    public function sendMailContactus(Request $request)
     {
         if($request['name'] == 'null' || $request['name'] == ''){
             $name = null;
         }else{
             $name = str_replace("%20", " ", $request['name']);
         }
-        if($request['sender'] == 'null' || $request['sender'] == ''){
-            $sender = null;
+        if($request['reply'] == 'null' || $request['reply'] == ''){
+            $reply = null;
         }else{
-            $sender = str_replace("%20", " ", $request['sender']);
-        }
-        if($request['receiver'] == 'null' || $request['receiver'] == ''){
-            $receiver = null;
-        }else{
-            $receiver = str_replace("%20", " ", $request['receiver']);
+            $reply = str_replace("%20", " ", $request['reply']);
         }
         if($request['message'] == 'null' || $request['message'] == ''){
             $message = null;
         }else{
             $message = str_replace("%20", " ", $request['message']);
         }
-        
-        return Util::sendMail($name, $sender, $receiver, $message, null, null);
+
+        return Util::sendEmailContactus($name, $reply, $message);        
     }
 
     public function listCountries()
@@ -419,8 +240,13 @@ class ApiController extends Controller
         return Util::listCountries();
     }
 
-    public function paymentConfirmation(Request $request, $user_id)
+    public function paymentConfirmation(Request $request, $customer_id, $shop_id)
     {
+        if($request['email'] == 'null' || $request['email'] == ''){
+            $email = null;
+        }else{
+            $email = str_replace("%20", " ", $request['email']);
+        }
         if($request['transactionId'] == 'null' || $request['transactionId'] == ''){
             $transactionId = null;
         }else{
@@ -432,6 +258,6 @@ class ApiController extends Controller
             $retrievalReference = str_replace("%20", " ", $request['retrievalReference']);
         }
         
-        return CheckoutBusiness::paymentConfirmation($user_id, $transactionId, $retrievalReference);
+        return CheckoutBusiness::paymentConfirmation($customer_id, $shop_id, $email, $transactionId, $retrievalReference);
     }
 }

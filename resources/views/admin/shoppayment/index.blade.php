@@ -15,19 +15,27 @@
 			{{ csrf_field() }}
 
 			<div class="row">
-                <div class="col s12 m2">
+                <div class="col s12 m6">
+                    <div class="input-field">
+                        <input class="validate" type="text" name="url" maxlength="200" data-length="200" value="{{ Session::get('register')->url }}">
+                        <label>Url</label>
+                    </div>
+                </div>
+                <div class="col s12 m6">
                     <div class="input-field">
                         <input class="validate" type="text" name="vendor_name" maxlength="30" data-length="30" value="{{ Session::get('register')->vendor_name }}">
                         <label>Vendor Name</label>
                     </div>
                 </div>
-                <div class="col s12 m5">
+            </div>
+            <div class="row">
+                <div class="col s12 m6">
                     <div class="input-field">
                         <input class="validate" type="text" name="integration_key" maxlength="190" data-length="190" value="{{ Session::get('register')->integration_key }}">
                         <label>Integration Key</label>
                     </div>
                 </div>
-                <div class="col s12 m5">
+                <div class="col s12 m6">
                     <div class="input-field">
                         <input class="validate" type="text" name="integration_password" maxlength="190" data-length="190" value="{{ Session::get('register')->integration_password }}">
                         <label>Integration Password</label>

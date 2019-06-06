@@ -56,7 +56,7 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'fthiagocdo@gmail.com'),
+        'address' => env('MAIL_FROM_ADDRESS', 'ftcdevsolutions@gmail.com'),
         'name' => env('MAIL_FROM_NAME', 'New York Deli'),
     ],
 
@@ -84,9 +84,9 @@ return [
     |
     */
 
-    'username' => env('MAIL_USERNAME', 'fthiagocdo@gmail.com'),
+    'username' => env('MAIL_USERNAME', 'ftcdevsolutions@gmail.com'),
 
-    'password' => env('MAIL_PASSWORD', 'g19a75l69'),
+    'password' => env('MAIL_PASSWORD', '34D&WDco%T'),
 
     /*
     |--------------------------------------------------------------------------

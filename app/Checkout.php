@@ -4,7 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Shop;
-use App\User;
+use App\Customer;
 use App\CheckoutItem;
 use App\PaymentConfirmation;
 
@@ -15,9 +15,9 @@ class Checkout extends Model
         return $this->belongsTo(Shop::class, 'shop_id')->first();
     }
 
-    public function user()
+    public function customer()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function checkoutItems()

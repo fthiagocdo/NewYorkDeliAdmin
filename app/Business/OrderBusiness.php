@@ -13,7 +13,7 @@ use App\Business\CheckoutBusiness;
 use App\Checkout;
 use App\Shop;
 use App\ShopSchedule;
-use App\User;
+use App\Customer;
 use App\MenuItem;
 use App\CheckoutItem;
 use App\CheckoutItemExtra;
@@ -21,10 +21,10 @@ use App\PaymentConfirmation;
 
 class OrderBusiness
 {
-    public static function listOrderHistory($user_id, $shop_id)
+    public static function listOrderHistory($customer_id, $shop_id)
 	{
         try{
-			$registers = Checkout::where('user_id', '=', $user_id)
+			$registers = Checkout::where('customer_id', '=', $customer_id)
 				->where('shop_id', '=', $shop_id)
 				->where('confirmed', '=', true)
 				->orderBy('updated_at', 'desc')
@@ -83,14 +83,15 @@ class OrderBusiness
         }catch(Exception $e){
             Log::error('OrderBusiness.getOrderDetails: '.$e->getMessage());
             $return['error'] = true;
-            $return['message'] = $e->getMessage();//'It was no possible complete your request. Please try again later...';
+            $return['message'] = $e->getMessage();
             return $return;
         }
     }
     
-    public static function orderAgain($id, $user_id)
+    public static function orderAgain($id, $customer_id, $shop_id)
 	{
-		$lastCheckout = Checkout::where('user_id', '=', $user_id)
+        $lastCheckout = Checkout::where('customer_id', '=', $customer_id)
+            ->where('shop_id', '=', $shop_id)
 			->where('confirmed', '=', false)
 			->first();
         
@@ -99,7 +100,7 @@ class OrderBusiness
         }
 
         $checkout = Checkout::find($id);
-        $result = CheckoutBusiness::shoppingCart($user_id, $checkout->shop()->id);
+        $result = CheckoutBusiness::shoppingCart($customer_id, $shop_id);
         $newCheckout = $result['checkout'];
         $newCheckout->partial_value = $checkout->partial_value;
 		$newCheckout->total_value = $checkout->partial_value + $newCheckout->delivery_fee + $newCheckout->rider_tip;
@@ -121,8 +122,10 @@ class OrderBusiness
 				$newCheckoutItemExtra->menuextra_id = $checkoutItemExtra->menuextra_id;
 				$newCheckoutItemExtra->save();
 			}
-		}
+        }
         
-		return CheckoutBusiness::shoppingCart($user_id, $checkout->shop()->id);
+        $return['error'] = false;
+        $return['$checkout'] = $checkout;
+        return $return;
 	}
 }

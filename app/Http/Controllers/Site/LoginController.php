@@ -20,7 +20,7 @@ class LoginController extends Controller
             ->with('currentMenu', 'login');
 	}
 
-	public function login(Request $request) 
+	/*public function login(Request $request) 
 	{
         $data = $request->all();
         $return = UserBusiness::signIn($data);
@@ -33,56 +33,22 @@ class LoginController extends Controller
 		}else{
 			return redirect()->route('site.home');
 		}
-    }
+    }*/
 
-	public function redirectToProvider($provider)
-    {
-        return Socialite::driver($provider)->redirect();
-    }
-
-    public function handleProviderCallback($provider)
-    {
-        $credentials = Socialite::driver($provider)->stateless()->user();
-        
-        $data['name'] = $credentials->name;
-        $data['email'] = $credentials->email;
-        $data['provider'] = $provider;
-        $data['avatar'] = $credentials->avatar_original;
-        $data['password'] = $provider.'_'.Hash::make(str_random(8));
-        $return = UserBusiness::signInSocial($data);
-
-        if($return['error']){
-			return redirect()->back()
-                ->with('name', $data['email'])
-                ->with('message', $return['message'])
-                ->with('typeMessage', 'red white-text');
-		}else{
-            Auth::login($return['user'], true);
-			return redirect()->route('site.home');
-		}
-    }
-
-    public function findOrCreateUser($user, $provider){
-        $authUser = User::where('provider_id', '=', $user->id)->first();
-        if($authUser){
-            return $authUser;
+    public function login(Request $request){
+        $msgError = $this->validateLogin($request);
+        if(strlen($msgError) == 0){
+            if(Auth::attempt(['email' => request('email'), 'password' => request('password')])){ 
+                return redirect()->route('site.home');
+            }else{ 
+                return redirect()->back()
+            	->with( ['message' => 'User not authorised!'] )
+                ->with( ['typeMessage' => 'red white-text'] ); 
+            } 
         }else{
-            //Change the size of the avatar
-            if($provider == 'google'){
-                $img = substr($user->avatar, 0, strpos($user->avatar, '?sz=50'));
-            }
-            $createdUser = User::create([
-                'name' => $user->name,
-                'email' => $user->email,
-                'provider' => $provider,
-                'provider_id' => $user->id,
-                'avatar' => $img.'?sz=200',
-                'shop_id' => Shop::all()->first()->id
-            ]);
-
-            $createdUser->addRole('customer');
-
-            return $createdUser;
+            return redirect()->back()
+            	->with( ['message' => $msgError] )
+                ->with( ['typeMessage' => 'red white-text'] );
         }
     }
 
@@ -176,21 +142,14 @@ class LoginController extends Controller
         return redirect()->route('site.home');
     }
 
-	public function validateLogin($user)
+	public function validateLogin($request)
 	{
-		if(!isset($user->name)){
+        if(!isset($request['email']) || $request['email'] == null){
             return 'All fields must be informed.';
-        } else if(!isset($user->email)){
+        } else if(!isset($request['password']) || $request['password'] == null){
             return 'All fields must be informed.';
-        } else if(!isset($user->password)){
-            return 'All fields must be informed.';
-        } else if (!filter_var($user->email, FILTER_VALIDATE_EMAIL)) {
+        } else if (!filter_var($request['email'], FILTER_VALIDATE_EMAIL)) {
             return 'E-mail is not valid.';
-        } else if(strlen($user->password)<8){
-            return 'The password must be at least 8 characters long.';
-        } else if(User::where('email', '=', $user->email)
-                    ->first()){
-            return 'The e-mail is already being used.';
         }
 
         return '';

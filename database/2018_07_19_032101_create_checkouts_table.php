@@ -13,19 +13,21 @@ class CreateCheckoutsTable extends Migration
      */
     public function up()
     {
-        Schema::create('checkouts', function (Blueprint $table) {
-            $table->increments('id');
-            $table->integer('user_id')->unsigned();
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->double('partial_value', 8, 2);
-            $table->double('delivery_fee', 8, 2);
-            $table->double('rider_tip', 8, 2);
-            $table->double('total_value', 8, 2);
-            $table->integer('shop_id')->unsigned();
-            $table->foreign('shop_id')->references('id')->on('shops')->onDelete('cascade');
-            $table->boolean('confirmed')->default(false);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('checkouts')) {
+            Schema::create('checkouts', function (Blueprint $table) {
+                $table->increments('id');
+                $table->integer('user_id')->unsigned();
+                $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+                $table->double('partial_value', 8, 2);
+                $table->double('delivery_fee', 8, 2);
+                $table->double('rider_tip', 8, 2);
+                $table->double('total_value', 8, 2);
+                $table->integer('shop_id')->unsigned();
+                $table->foreign('shop_id')->references('id')->on('shops')->onDelete('cascade');
+                $table->boolean('confirmed')->default(false);
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -35,6 +37,6 @@ class CreateCheckoutsTable extends Migration
      */
     public function down()
     {
-        //Schema::dropIfExists('checkouts');
+        Schema::dropIfExists('checkouts');
     }
 }
